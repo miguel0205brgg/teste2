@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configurações do Supabase
 SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://naawyjavknbewjgzcnxv.supabase.co')
