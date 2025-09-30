@@ -3,15 +3,22 @@ import sys
 # DON\'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, render_template
 
 from src.routes.biblioteca import biblioteca_bp
 from src.config import SECRET_KEY, DEBUG
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
+app = Flask(__name__, 
+            static_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static'),
+            template_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates'))
 app.config['SECRET_KEY'] = SECRET_KEY
 
 app.register_blueprint(biblioteca_bp, url_prefix='/api')
+
+@app.route('/cadastro')
+def cadastro():
+    """Renderiza a página de cadastro"""
+    return render_template('cadastro.html')
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
