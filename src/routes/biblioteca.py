@@ -11,7 +11,7 @@ def cadastrar_usuario():
         data = request.json
         
         # Validar dados obrigatórios
-        required_fields = ['nome', 'email', 'senha']
+        required_fields = ['nome', 'email', 'senha', 'telefone', 'endereco']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
