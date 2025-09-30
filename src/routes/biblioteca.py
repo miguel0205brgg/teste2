@@ -11,7 +11,7 @@ def cadastrar_usuario():
         data = request.json
         
         # Validar dados obrigatórios
-        required_fields = ['nome', 'email', 'senha', 'role']
+        required_fields = ['nome', 'email', 'senha']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
@@ -21,12 +21,12 @@ def cadastrar_usuario():
         
         # Cadastrar usuário
         result = supabase_service.cadastrar_usuario_completo(
-            nome=data['nome'],
-            email=data['email'],
-            senha=data['senha'],
-            role=data['role'],
-            endereco=data.get('endereco'),
-            telefone=data.get('telefone')
+            nome=data["nome"],
+            email=data["email"],
+            senha=data["senha"],
+            role="usuario", # Força a role para 'usuario'
+            endereco=data.get("endereco"),
+            telefone=data.get("telefone")
         )
         
         if result['success']:
