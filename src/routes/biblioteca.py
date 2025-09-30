@@ -81,6 +81,8 @@ def login_usuario():
             result["redirect_url"] = redirect_url
             return jsonify(result), 200
         else:
+            # result já contém {success: False, message: 'Usuário não encontrado' ou 'Senha incorreta'}
+            # ou {success: False, error: ..., message: 'Erro ao autenticar usuário'}
             return jsonify(result), 401
             
     except Exception as e:

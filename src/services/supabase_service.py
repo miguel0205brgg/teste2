@@ -41,10 +41,18 @@ class SupabaseService:
                 'message': 'Usuário criado com sucesso'
             }
         except Exception as e:
+            error_message = str(e)
+            if "duplicate key value violates unique constraint" in error_message and "email" in error_message:
+                return {
+                    'success': False,
+                    'field': 'email',
+                    'message': 'Este e-mail já está cadastrado. Por favor, use outro e-mail.',
+                    'error': error_message
+                }
             return {
                 'success': False,
-                'error': str(e),
-                'message': 'Erro ao criar usuário'
+                'error': error_message,
+                'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
             }
     
     def criar_leitor(self, usuario_id: int, endereco: str = None, telefone: str = None, email: str = None):
@@ -121,7 +129,8 @@ class SupabaseService:
             if not result.data:
                 return {
                     'success': False,
-                    'message': 'Usuário não encontrado'
+                    'field': 'email',
+                    'message': 'Usuário não encontrado. Verifique o e-mail digitado.'
                 }
             
             usuario = result.data[0]
@@ -138,7 +147,8 @@ class SupabaseService:
             else:
                 return {
                     'success': False,
-                    'message': 'Senha incorreta'
+                    'field': 'senha',
+                    'message': 'Senha incorreta. Por favor, tente novamente.'
                 }
                 
         except Exception as e:
