@@ -16,7 +16,8 @@ def cadastrar_usuario():
             if not data.get(field):
                 return jsonify({
                     'success': False,
-                    'message': f'Campo {field} é obrigatório'
+                    'field': field,
+                    'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
                 }), 400
         
         # Cadastrar usuário
@@ -47,13 +48,18 @@ def login_usuario():
     try:
         data = request.json
         
-        # Validar dados obrigatórios
-        if not data.get('email') or not data.get('senha'):
+        # Validar dados obrig        if not data.get(\'email\'):
             return jsonify({
-                'success': False,
-                'message': 'Email e senha são obrigatórios'
+                \'success\': False,
+                \'field\': \'email\',
+                \'message\': \'O campo "email" é obrigatório e não pode estar vazio.\'
             }), 400
-        
+        if not data.get(\'senha\'):
+            return jsonify({
+                \'success\': False,
+                \'field\': \'senha\',
+                \'message\': \'O campo "senha" é obrigatório e não pode estar vazio.\'
+            }), 400       
         # Autenticar usuário
         result = supabase_service.autenticar_usuario(
             email=data['email'],
@@ -66,6 +72,13 @@ def login_usuario():
             session['usuario_role'] = result['data']['role']
             session['usuario_nome'] = result['data']['nome']
             
+            redirect_url = 
+            if session["usuario_role"] == "dev":
+                redirect_url = "/dashboard-dev"  # Exemplo de página para desenvolvedores
+            else:
+                redirect_url = "/dashboard-usuario"  # Exemplo de página para usuários comuns
+            
+            result["redirect_url"] = redirect_url
             return jsonify(result), 200
         else:
             return jsonify(result), 401
@@ -108,6 +121,13 @@ def obter_perfil():
         result = supabase_service.buscar_usuario_por_id(session['usuario_id'])
         
         if result['success']:
+            redirect_url = 
+            if session["usuario_role"] == "dev":
+                redirect_url = "/dashboard-dev"  # Exemplo de página para desenvolvedores
+            else:
+                redirect_url = "/dashboard-usuario"  # Exemplo de página para usuários comuns
+            
+            result["redirect_url"] = redirect_url
             return jsonify(result), 200
         else:
             return jsonify(result), 404
