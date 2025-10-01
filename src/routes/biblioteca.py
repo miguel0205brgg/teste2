@@ -1,3 +1,4 @@
+
 from flask import Blueprint, jsonify, request, session
 from src.services.supabase_service import SupabaseService
 
@@ -11,7 +12,7 @@ def cadastrar_usuario():
         data = request.json
         
         # Validar dados obrigatórios
-        required_fields = ['nome', 'email', 'senha', 'telefone', 'endereco']
+        required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero', 'complemento']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
@@ -20,13 +21,42 @@ def cadastrar_usuario():
                     'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
                 }), 400
         
+        # Validar comprimento dos campos de endereço
+        cep = data.get('cep')
+        numero = data.get('numero')
+        complemento = data.get('complemento')
+
+        if len(cep) != 9:
+            return jsonify({
+                'success': False,
+                'field': 'cep',
+                'message': 'O campo "cep" deve ter 9 caracteres.'
+            }), 400
+        
+        if len(numero) > 10:
+            return jsonify({
+                'success': False,
+                'field': 'numero',
+                'message': 'O campo "numero" deve ter no máximo 10 caracteres.'
+            }), 400
+
+        if len(complemento) > 30:
+            return jsonify({
+                'success': False,
+                'field': 'complemento',
+                'message': 'O campo "complemento" deve ter no máximo 30 caracteres.'
+            }), 400
+
+        # Concatenar endereço para passar para o serviço Supabase
+        endereco_completo = f"CEP: {cep}, Número: {numero}, Complemento: {complemento}"
+
         # Cadastrar usuário
         result = supabase_service.cadastrar_usuario_completo(
             nome=data["nome"],
             email=data["email"],
             senha=data["senha"],
             role="usuario", # Força a role para 'usuario'
-            endereco=data.get("endereco"),
+            endereco=endereco_completo,
             telefone=data.get("telefone")
         )
         
@@ -48,17 +78,18 @@ def login_usuario():
     try:
         data = request.json
         
-        # Validar dados obrig        if not data.get(\'email\'):
+        # Validar dados obrigatórios
+        if not data.get('email'):
             return jsonify({
-                \'success\': False,
-                \'field\': \'email\',
-                \'message\': \'O campo "email" é obrigatório e não pode estar vazio.\'
+                'success': False,
+                'field': 'email',
+                'message': 'O campo "email" é obrigatório e não pode estar vazio.'
             }), 400
-        if not data.get(\'senha\'):
+        if not data.get('senha'):
             return jsonify({
-                \'success\': False,
-                \'field\': \'senha\',
-                \'message\': \'O campo "senha" é obrigatório e não pode estar vazio.\'
+                'success': False,
+                'field': 'senha',
+                'message': 'O campo "senha" é obrigatório e não pode estar vazio.'
             }), 400       
         # Autenticar usuário
         result = supabase_service.autenticar_usuario(
@@ -72,7 +103,7 @@ def login_usuario():
             session['usuario_role'] = result['data']['role']
             session['usuario_nome'] = result['data']['nome']
             
-            redirect_url = 
+            redirect_url = ''
             if session["usuario_role"] == "dev":
                 redirect_url = "/dashboard-dev"  # Exemplo de página para desenvolvedores
             else:
@@ -94,7 +125,7 @@ def login_usuario():
 
 @biblioteca_bp.route('/logout', methods=['POST'])
 def logout_usuario():
-    """Endpoint para logout de usuários"""
+    """Endpoint para logout de usuários""""
     try:
         session.clear()
         return jsonify({
@@ -123,7 +154,7 @@ def obter_perfil():
         result = supabase_service.buscar_usuario_por_id(session['usuario_id'])
         
         if result['success']:
-            redirect_url = 
+            redirect_url = ''
             if session["usuario_role"] == "dev":
                 redirect_url = "/dashboard-dev"  # Exemplo de página para desenvolvedores
             else:
@@ -159,3 +190,47 @@ def status_sistema():
             'error': str(e),
             'message': 'Erro interno do servidor'
         }), 500
+
+
+
+@biblioteca_bp.route("/solicitar_reset_senha", methods=["POST"])
+def solicitar_reset_senha():
+    """Endpoint para solicitar o reset de senha"""
+    try:
+        data = request.json
+        email = data.get("email")
+
+        if not email:
+            return jsonify({"success": False, "message": "E-mail é obrigatório."}), 400
+
+        result = supabase_service.gerar_token_reset_senha(email)
+        if result["success"]:
+            # Em um cenário real, você enviaria este token por e-mail para o usuário
+            # Por simplicidade, estamos retornando o token aqui para fins de teste/demonstração
+            return jsonify({"success": True, "message": "Token de reset de senha gerado. Verifique seu e-mail.", "token": result["token"]}), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "message": "Erro interno do servidor."}), 500
+
+@biblioteca_bp.route("/resetar_senha", methods=["POST"])
+def resetar_senha():
+    """Endpoint para resetar a senha usando um token"""
+    try:
+        data = request.json
+        token = data.get("token")
+        nova_senha = data.get("nova_senha")
+
+        if not token or not nova_senha:
+            return jsonify({"success": False, "message": "Token e nova senha são obrigatórios."}), 400
+
+        result = supabase_service.resetar_senha(token, nova_senha)
+        if result["success"]:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "message": "Erro interno do servidor."}), 500
+
