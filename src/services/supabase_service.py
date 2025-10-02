@@ -95,7 +95,8 @@ class SupabaseService:
                 
                 if not leitor_result['success']:
                     # Se falhar ao criar leitor, remover o usuário criado
-                   self.supabase.table(\'usuario\').delete().eq(\'id\', usuario_id).execute()                 return {
+                   self.supabase.table('usuario').delete().eq('id', usuario_id).execute()         
+					return {
                         'success': False,
                         'error': leitor_result['error'],
                         'message': 'Erro ao criar perfil de leitor'
