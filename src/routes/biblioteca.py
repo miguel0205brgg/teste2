@@ -125,7 +125,7 @@ def login_usuario():
 
 @biblioteca_bp.route('/logout', methods=['POST'])
 def logout_usuario():
-    """Endpoint para logout de usuários""""
+    """Endpoint para logout de usuários"""
     try:
         session.clear()
         return jsonify({
