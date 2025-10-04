@@ -77,12 +77,12 @@ class SupabaseService:
                 'message': 'Erro ao criar leitor'
             }
     
-    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, role: str = 'usuario', 
+    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, 
                                  endereco: str = None, telefone: str = None):
         """Cadastra um usuário completo (usuario + leitor se for tipo 'usuario')"""
         try:
             # Criar usuário
-            usuario_result = self.criar_usuario(nome, email, senha, role)
+            usuario_result = self.criar_usuario(nome, email, senha, role='usuario')
             
             if not usuario_result['success']:
                 return usuario_result
@@ -90,28 +90,26 @@ class SupabaseService:
             usuario_id = usuario_result['data']['id']
             
             # Se for usuário comum, criar também o registro de leitor
-            if role == 'usuario':
-                leitor_result = self.criar_leitor(usuario_id, endereco, telefone, email)
-                
-                if not leitor_result['success']:
-                    # Se falhar ao criar leitor, remover o usuário criado
-                   self.supabase.table('usuario').delete().eq('id', usuario_id).execute()         
-                    return {
-                        'success': False,
-                        'error': leitor_result['error'],
-                        'message': 'Erro ao criar perfil de leitor'
-                    }
-                
+            # A role é sempre 'usuario' agora, então esta condição é sempre verdadeira
+            leitor_result = self.criar_leitor(usuario_id, endereco, telefone, email)
+            
+            if not leitor_result['success']:
+                # Se falhar ao criar leitor, remover o usuário criado
+                self.supabase.table('usuario').delete().eq('id', usuario_id).execute()
                 return {
-                    'success': True,
-                    'data': {
-                        'usuario': usuario_result['data'],
-                        'leitor': leitor_result['data']
-                    },
-                    'message': 'Usuário e leitor cadastrados com sucesso'
+                    'success': False,
+                    'error': leitor_result['error'],
+                    'message': 'Erro ao criar perfil de leitor'
                 }
             
-            return usuario_result
+            return {
+                'success': True,
+                'data': {
+                    'usuario': usuario_result['data'],
+                    'leitor': leitor_result['data']
+                },
+                'message': 'Usuário e leitor cadastrados com sucesso'
+            }
             
         except Exception as e:
             return {

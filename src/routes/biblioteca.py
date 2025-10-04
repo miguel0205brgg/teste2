@@ -12,7 +12,8 @@ def cadastrar_usuario():
         data = request.json
         
         # Validar dados obrigatórios
-        required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero', 'complemento']
+        required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero']
+        complemento = data.get('complemento', '')
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
@@ -24,8 +25,6 @@ def cadastrar_usuario():
         # Validar comprimento dos campos de endereço
         cep = data.get('cep')
         numero = data.get('numero')
-        complemento = data.get('complemento')
-
         if len(cep) != 9:
             return jsonify({
                 'success': False,
@@ -40,15 +39,10 @@ def cadastrar_usuario():
                 'message': 'O campo "numero" deve ter no máximo 10 caracteres.'
             }), 400
 
-        if len(complemento) > 30:
-            return jsonify({
-                'success': False,
-                'field': 'complemento',
-                'message': 'O campo "complemento" deve ter no máximo 30 caracteres.'
-            }), 400
-
         # Concatenar endereço para passar para o serviço Supabase
-        endereco_completo = f"CEP: {cep}, Número: {numero}, Complemento: {complemento}"
+        endereco_completo = f"CEP: {cep}, Número: {numero}"
+        if complemento:
+            endereco_completo += f", Complemento: {complemento}"
 
         # Cadastrar usuário
         result = supabase_service.cadastrar_usuario_completo(
