@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!value) {
                     showError(fieldName, 'O campo "email" é obrigatório e não pode estar vazio.');
                     return false;
-                } else if (!/^[\S+@\S+\.\S+]+$/.test(value)) {
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
                     showError(fieldName, 'Por favor, digite um e-mail válido.');
                     return false;
                 }
@@ -108,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!value) {
                     showError(fieldName, 'O campo "CEP" é obrigatório e não pode estar vazio.');
                     return false;
-                } else if (!/^\d{5}-\d{3}$/.test(value)) {
-                    showError(fieldName, 'Por favor, digite um CEP válido (ex: 12345-678).');
+                } else if (!/^\d{5}-\d{3}$|^\d{8}$/.test(value.replace(/\D/g, ''))) {
+                    showError(fieldName, 'Por favor, digite um CEP válido (ex: 12345-678 ou 12345678).');
                     return false;
                 }
                 break;
@@ -118,14 +118,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!value) {
                     showError(fieldName, 'O campo "Número" é obrigatório e não pode estar vazio.');
                     return false;
-                } else if (value.length > 10) {
-                    showError(fieldName, 'O número deve ter no máximo 10 caracteres.');
+                } else if (isNaN(value) || parseInt(value) <= 0) {
+                    showError(fieldName, 'Por favor, digite um número válido.');
                     return false;
                 }
                 break;
-            
+
             case 'complemento':
-                if (value.length > 30) {
+                // Complemento é opcional, então só valida se preenchido
+                if (value && value.length > 30) {
                     showError(fieldName, 'O complemento deve ter no máximo 30 caracteres.');
                     return false;
                 }
@@ -139,21 +140,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para validar todo o formulário
     function validateForm() {
         let isValid = true;
-        // Validar campos obrigatórios
-        const requiredFields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero'];
-        requiredFields.forEach(fieldName => {
-            const field = document.getElementById(fieldName);
-            if (field && !validateField(field)) {
+        inputs.forEach(input => {
+            if (!validateField(input)) {
                 isValid = false;
             }
         });
-
-        // Validar campo opcional (complemento)
-        const complementoField = document.getElementById('complemento');
-        if (complementoField && !validateField(complementoField)) {
-            isValid = false;
-        }
-
         return isValid;
     }
 
@@ -170,13 +161,13 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         const formData = {
-            nome: document.getElementById('nome').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            senha: document.getElementById('senha').value,
-            telefone: document.getElementById('telefone').value.trim(),
-            cep: document.getElementById('cep').value.trim(),
-            numero: document.getElementById('numero').value.trim(),
-            complemento: document.getElementById('complemento').value.trim() // Complemento é opcional
+            nome: document.getElementById(\'nome\').value.trim(),
+            email: document.getElementById(\'email\').value.trim(),
+            senha: document.getElementById(\'senha\').value,
+            telefone: document.getElementById(\'telefone\').value.trim(),
+            cep: document.getElementById(\'cep\').value.trim(),
+            numero: document.getElementById(\'numero\').value.trim(),
+            complemento: document.getElementById(\'complemento\').value.trim()
         };
 
         try {
@@ -227,16 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        e.target.value = value;
-    });
-
-    // Formatação do CEP em tempo real
-    const cepInput = document.getElementById('cep');
-    cepInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 5) {
-            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-        }
         e.target.value = value;
     });
 });
