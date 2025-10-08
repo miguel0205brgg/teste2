@@ -98,8 +98,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!value) {
                     showError(fieldName, 'O campo "telefone" é obrigatório e não pode estar vazio.');
                     return false;
-                } else if (!/^[\d\s\(\)\-\+]+$/.test(value) || value.replace(/\D/g, '').length < 10) {
-                    showError(fieldName, 'Por favor, digite um telefone válido.');
+                } else if (!/^\d{5}-\d{4}$|^\d{4}-\d{4}$|^\d{8}$|^\d{9}$/.test(value.replace(/\D/g, ''))) {
+                    showError(fieldName, 'Por favor, digite um telefone válido (ex: (11) 99999-9999).');
                     return false;
                 }
                 break;
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             
             case 'complemento':
-                if (value.length > 30) {
+                if (value && value.length > 30) {
                     showError(fieldName, 'O complemento deve ter no máximo 30 caracteres.');
                     return false;
                 }
@@ -240,3 +240,4 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.value = value;
     });
 });
+

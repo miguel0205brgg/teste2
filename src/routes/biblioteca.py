@@ -1,42 +1,50 @@
-
 from flask import Blueprint, jsonify, request, session
 from src.services.supabase_service import SupabaseService
 
-biblioteca_bp = Blueprint('biblioteca', __name__)
+
+biblioteca_bp = Blueprint(\'biblioteca\', __name__)
 supabase_service = SupabaseService()
 
-@biblioteca_bp.route('/cadastro', methods=['POST'])
+@biblioteca_bp.route(\'/cadastro\', methods=[\'POST\'])
 def cadastrar_usuario():
     """Endpoint para cadastro de novos usuários"""
     try:
         data = request.json
         
         # Validar dados obrigatórios
-        required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero']
-        complemento = data.get('complemento', '')
+        required_fields = [\'nome\', \'email\', \'senha\', \'telefone\', \'cep\', \'numero\']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
-                    'success': False,
-                    'field': field,
-                    'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
+                    \'success\': False,
+                    \'field\': field,
+                    \'message\': f\'O campo "{field}" é obrigatório e não pode estar vazio.\'
                 }), 400
         
         # Validar comprimento dos campos de endereço
-        cep = data.get('cep')
-        numero = data.get('numero')
+        cep = data.get(\'cep\')
+        numero = data.get(\'numero\')
+        complemento = data.get(\'complemento\') # Complemento é opcional
+
         if len(cep) != 9:
             return jsonify({
-                'success': False,
-                'field': 'cep',
-                'message': 'O campo "cep" deve ter 9 caracteres.'
+                \'success\': False,
+                \'field\': \'cep\',
+                \'message\': \'O campo "cep" deve ter 9 caracteres (ex: 12345-678).\'
             }), 400
         
         if len(numero) > 10:
             return jsonify({
-                'success': False,
-                'field': 'numero',
-                'message': 'O campo "numero" deve ter no máximo 10 caracteres.'
+                \'success\': False,
+                \'field\': \'numero\',
+                \'message\': \'O campo "numero" deve ter no máximo 10 caracteres.\'
+            }), 400
+
+        if complemento and len(complemento) > 30:
+            return jsonify({
+                \'success\': False,
+                \'field\': \'complemento\',
+                \'message\': \'O campo "complemento" deve ter no máximo 30 caracteres.\'
             }), 400
 
         # Concatenar endereço para passar para o serviço Supabase
@@ -49,55 +57,55 @@ def cadastrar_usuario():
             nome=data["nome"],
             email=data["email"],
             senha=data["senha"],
-            role="usuario", # Força a role para 'usuario'
+            role="usuario", # Força a role para \'usuario\'
             endereco=endereco_completo,
             telefone=data.get("telefone")
         )
         
-        if result['success']:
+        if result[\'success\']:
             return jsonify(result), 201
         else:
             return jsonify(result), 400
             
     except Exception as e:
         return jsonify({
-            'success': False,
-            'error': str(e),
-            'message': 'Erro interno do servidor'
+            \'success\': False,
+            \'error\': str(e),
+            \'message\': \'Erro interno do servidor\'
         }), 500
 
-@biblioteca_bp.route('/login', methods=['POST'])
+@biblioteca_bp.route(\'/login\', methods=[\'POST\'])
 def login_usuario():
     """Endpoint para login de usuários"""
     try:
         data = request.json
         
         # Validar dados obrigatórios
-        if not data.get('email'):
+        if not data.get(\'email\'):
             return jsonify({
-                'success': False,
-                'field': 'email',
-                'message': 'O campo "email" é obrigatório e não pode estar vazio.'
+                \'success\': False,
+                \'field\': \'email\',
+                \'message\': \'O campo "email" é obrigatório e não pode estar vazio.\'
             }), 400
-        if not data.get('senha'):
+        if not data.get(\'senha\'):
             return jsonify({
-                'success': False,
-                'field': 'senha',
-                'message': 'O campo "senha" é obrigatório e não pode estar vazio.'
+                \'success\': False,
+                \'field\': \'senha\',
+                \'message\': \'O campo "senha" é obrigatório e não pode estar vazio.\'
             }), 400       
         # Autenticar usuário
         result = supabase_service.autenticar_usuario(
-            email=data['email'],
-            senha=data['senha']
+            email=data[\'email\'],
+            senha=data[\'senha\']
         )
         
-        if result['success']:
+        if result[\'success\']:
             # Salvar dados do usuário na sessão
-            session['usuario_id'] = result['data']['id']
-            session['usuario_role'] = result['data']['role']
-            session['usuario_nome'] = result['data']['nome']
+            session[\'usuario_id\'] = result[\'data\'][\'id\']
+            session[\'usuario_role\'] = result[\'data\'][\'role\']
+            session[\'usuario_nome\'] = result[\'data\'][\'nome\']
             
-            redirect_url = ''
+            redirect_url = \'\'
             if session["usuario_role"] == "dev":
                 redirect_url = "/dashboard-dev"  # Exemplo de página para desenvolvedores
             else:
@@ -106,49 +114,49 @@ def login_usuario():
             result["redirect_url"] = redirect_url
             return jsonify(result), 200
         else:
-            # result já contém {success: False, message: 'Usuário não encontrado' ou 'Senha incorreta'}
-            # ou {success: False, error: ..., message: 'Erro ao autenticar usuário'}
+            # result já contém {success: False, message: \'Usuário não encontrado\' ou \'Senha incorreta\'}
+            # ou {success: False, error: ..., message: \'Erro ao autenticar usuário\'}
             return jsonify(result), 401
             
     except Exception as e:
         return jsonify({
-            'success': False,
-            'error': str(e),
-            'message': 'Erro interno do servidor'
+            \'success\': False,
+            \'error\': str(e),
+            \'message\': \'Erro interno do servidor\'
         }), 500
 
-@biblioteca_bp.route('/logout', methods=['POST'])
+@biblioteca_bp.route(\'/logout\', methods=[\'POST\'])
 def logout_usuario():
     """Endpoint para logout de usuários"""
     try:
         session.clear()
         return jsonify({
-            'success': True,
-            'message': 'Logout realizado com sucesso'
+            \'success\': True,
+            \'message\': \'Logout realizado com sucesso\'
         }), 200
         
     except Exception as e:
         return jsonify({
-            'success': False,
-            'error': str(e),
-            'message': 'Erro interno do servidor'
+            \'success\': False,
+            \'error\': str(e),
+            \'message\': \'Erro interno do servidor\'
         }), 500
 
-@biblioteca_bp.route('/perfil', methods=['GET'])
+@biblioteca_bp.route(\'/perfil\', methods=[\'GET\'])
 def obter_perfil():
     """Endpoint para obter dados do perfil do usuário logado"""
     try:
-        if 'usuario_id' not in session:
+        if \'usuario_id\' not in session:
             return jsonify({
-                'success': False,
-                'message': 'Usuário não autenticado'
+                \'success\': False,
+                \'message\': \'Usuário não autenticado\'
             }), 401
         
         # Buscar dados do usuário
-        result = supabase_service.buscar_usuario_por_id(session['usuario_id'])
+        result = supabase_service.buscar_usuario_por_id(session[\'usuario_id\'])
         
-        if result['success']:
-            redirect_url = ''
+        if result[\'success\']:
+            redirect_url = \'\'
             if session["usuario_role"] == "dev":
                 redirect_url = "/dashboard-dev"  # Exemplo de página para desenvolvedores
             else:
@@ -161,28 +169,28 @@ def obter_perfil():
             
     except Exception as e:
         return jsonify({
-            'success': False,
-            'error': str(e),
-            'message': 'Erro interno do servidor'
+            \'success\': False,
+            \'error\': str(e),
+            \'message\': \'Erro interno do servidor\'
         }), 500
 
-@biblioteca_bp.route('/status', methods=['GET'])
+@biblioteca_bp.route(\'/status\', methods=[\'GET\'])
 def status_sistema():
     """Endpoint para verificar o status do sistema"""
     try:
         return jsonify({
-            'success': True,
-            'message': 'Sistema de Biblioteca Online funcionando',
-            'version': '1.0.0',
-            'authenticated': 'usuario_id' in session,
-            'user_role': session.get('usuario_role', None)
+            \'success\': True,
+            \'message\': \'Sistema de Biblioteca Online funcionando\',
+            \'version\': \'1.0.0\',
+            \'authenticated\': \'usuario_id\' in session,
+            \'user_role\': session.get(\'usuario_role\', None)
         }), 200
         
     except Exception as e:
         return jsonify({
-            'success': False,
-            'error': str(e),
-            'message': 'Erro interno do servidor'
+            \'success\': False,
+            \'error\': str(e),
+            \'message\': \'Erro interno do servidor\'
         }), 500
 
 
@@ -227,4 +235,5 @@ def resetar_senha():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "message": "Erro interno do servidor."}), 500
+
 
