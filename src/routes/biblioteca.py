@@ -1,6 +1,6 @@
+
 from flask import Blueprint, jsonify, request, session
 from src.services.supabase_service import SupabaseService
-
 
 biblioteca_bp = Blueprint('biblioteca', __name__)
 supabase_service = SupabaseService()
@@ -13,6 +13,7 @@ def cadastrar_usuario():
         
         # Validar dados obrigatórios
         required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero']
+        complemento = data.get('complemento', '')
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
@@ -24,8 +25,6 @@ def cadastrar_usuario():
         # Validar comprimento dos campos de endereço
         cep = data.get('cep')
         numero = data.get('numero')
-        complemento = data.get('complemento') # Complemento é opcional
-
         if len(cep) != 9:
             return jsonify({
                 'success': False,
@@ -38,13 +37,6 @@ def cadastrar_usuario():
                 'success': False,
                 'field': 'numero',
                 'message': 'O campo "numero" deve ter no máximo 10 caracteres.'
-            }), 400
-
-        if complemento and len(complemento) > 30:
-            return jsonify({
-                'success': False,
-                'field': 'complemento',
-                'message': 'O campo "complemento" deve ter no máximo 30 caracteres.'
             }), 400
 
         # Concatenar endereço para passar para o serviço Supabase

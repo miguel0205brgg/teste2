@@ -1,26 +1,11 @@
 from supabase import create_client, Client
+from src.config import SUPABASE_URL, SUPABASE_KEY
 import hashlib
 import secrets
-import os
 
 class SupabaseService:
     def __init__(self):
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_KEY")
-
-        if not supabase_url:
-            raise ValueError("SUPABASE_URL não está configurado. Verifique seu arquivo .env ou variáveis de ambiente.")
-        if not supabase_key:
-            raise ValueError("SUPABASE_KEY não está configurado. Verifique seu arquivo .env ou variáveis de ambiente.")
-
-        print(f"DEBUG (SupabaseService): supabase_url = {supabase_url}")
-        print(f"DEBUG (SupabaseService): supabase_key = {supabase_key}")
-        self.supabase: Client = create_client(supabase_url, supabase_key)
-
-
-
-
-
+        self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     
     def hash_password(self, password: str) -> str:
         """Hash da senha usando SHA-256 com salt"""
@@ -74,7 +59,7 @@ class SupabaseService:
         """Cria um registro de leitor vinculado ao usuário"""
         try:
             result = self.supabase.table('leitor').insert({
-            'id_usuario': usuario_id,
+				'id_usuario': usuario_id,
                 'endereco': endereco,
                 'telefone': telefone,
                 'email': email
@@ -92,12 +77,12 @@ class SupabaseService:
                 'message': 'Erro ao criar leitor'
             }
     
-    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, role: str = 'usuario', 
+    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, 
                                  endereco: str = None, telefone: str = None):
         """Cadastra um usuário completo (usuario + leitor se for tipo 'usuario')"""
         try:
             # Criar usuário
-            usuario_result = self.criar_usuario(nome, email, senha, role)
+            usuario_result = self.criar_usuario(nome, email, senha, role='usuario')
             
             if not usuario_result['success']:
                 return usuario_result
@@ -105,28 +90,26 @@ class SupabaseService:
             usuario_id = usuario_result['data']['id']
             
             # Se for usuário comum, criar também o registro de leitor
-            if role == 'usuario':
-                leitor_result = self.criar_leitor(usuario_id, endereco, telefone, email)
-                
-                if not leitor_result['success']:
-                    # Se falhar ao criar leitor, remover o usuário criado
-                   self.supabase.table('usuario').delete().eq('id', usuario_id).execute()         
+            # A role é sempre 'usuario' agora, então esta condição é sempre verdadeira
+            leitor_result = self.criar_leitor(usuario_id, endereco, telefone, email)
+            
+            if not leitor_result['success']:
+                # Se falhar ao criar leitor, remover o usuário criado
+                self.supabase.table('usuario').delete().eq('id', usuario_id).execute()
                 return {
-                        'success': False,
-                        'error': leitor_result['error'],
-                        'message': 'Erro ao criar perfil de leitor'
-                    }
-                
-                return {
-                    'success': True,
-                    'data': {
-                        'usuario': usuario_result['data'],
-                        'leitor': leitor_result['data']
-                    },
-                    'message': 'Usuário e leitor cadastrados com sucesso'
+                    'success': False,
+                    'error': leitor_result['error'],
+                    'message': 'Erro ao criar perfil de leitor'
                 }
             
-            return usuario_result
+            return {
+                'success': True,
+                'data': {
+                    'usuario': usuario_result['data'],
+                    'leitor': leitor_result['data']
+                },
+                'message': 'Usuário e leitor cadastrados com sucesso'
+            }
             
         except Exception as e:
             return {
