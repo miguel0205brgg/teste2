@@ -20,14 +20,21 @@ app.register_blueprint(biblioteca_bp, url_prefix='/api')
 
 @app.route('/')
 def index():
-    """Redireciona a página inicial para o cadastro"""
-    return redirect('/cadastro')
+    """Renderiza a página inicial"""
+    return render_template('index.html')
 
 
 @app.route('/cadastro')
 def cadastro():
     """Renderiza a página de cadastro"""
     return render_template('cadastro.html')
+
+
+@app.route('/login')
+def login():
+    """Renderiza a página de login (a ser implementada)"""
+    # TODO: Criar a página de login
+    return redirect('/cadastro')
 
 
 if __name__ == '__main__':
