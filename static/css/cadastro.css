@@ -1,0 +1,215 @@
+/* Importando uma fonte moderna do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap' );
+
+/* --- Reset Básico e Estilos Globais --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  /* Usando a imagem de fundo */
+  background-image: url('../img/library_background.png');
+  background-size: cover;
+  background-position: center;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* --- Container Principal --- */
+.container {
+  display: flex;
+  width: 100%;
+  max-width: 1100px;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* --- Lado Esquerdo (Apresentação) --- */
+.left-side {
+  background: #007BFF;
+  color: #fff;
+  padding: 40px;
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.header-logo img {
+  width: 50px;
+  height: auto;
+}
+
+.left-side h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.left-side p {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.illustration {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- Lado Direito (Formulário) --- */
+.right-side {
+  padding: 40px;
+  width: 55%;
+  overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+}
+
+.right-side h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+/* NOVO: Agrupador de Label e Input para corrigir espaçamento */
+.form-group {
+  margin-bottom: 15px;
+  position: relative;
+}
+
+#cadastroForm label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+#cadastroForm input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#cadastroForm input:focus {
+  outline: none;
+  border-color: #007BFF;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+/* --- Ajustes Específicos --- */
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(15%); /* Ajuste fino vertical */
+  cursor: pointer;
+  color: #999;
+}
+
+.feedback-error {
+  color: #e74c3c;
+  font-size: 0.875em;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  height: 1em;
+}
+
+.endereco-fieldset {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.endereco-fieldset legend {
+  font-weight: 500;
+  color: #555;
+  padding: 0 10px;
+  font-size: 0.9rem;
+}
+
+.endereco-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.endereco-container .form-group {
+  margin-bottom: 0;
+}
+
+/* --- Botão e Link --- */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 20px;
+  color: #555;
+}
+
+.login-link a {
+  color: #007BFF;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+/* --- Responsividade --- */
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+  .left-side, .right-side {
+    width: 100%;
+  }
+  .left-side {
+    padding: 40px 25px;
+  }
+  .illustration {
+    max-width: 250px; /* Controla o tamanho da ilustração em telas menores */
+    margin: 0 auto;
+  }
+}
