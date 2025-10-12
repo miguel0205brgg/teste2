@@ -1,20 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('cadastroForm');
-  const cepInput = document.getElementById('cep');
-  const ruaInput = document.getElementById('rua');
-  const senhaInput = document.getElementById('senha');
-  const confirmarSenhaInput = document.getElementById('confirmar_senha');
-  const senhaFeedback = document.getElementById('senha-feedback');
-  const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.getElementById("cadastroForm");
+  const cepInput = document.getElementById("cep");
+  const ruaInput = document.getElementById("rua");
+  const senhaInput = document.getElementById("senha");
+  const confirmarSenhaInput = document.getElementById("confirmar_senha");
+  const senhaFeedback = document.getElementById("senha-feedback");
+  const togglePasswordIcons = document.querySelectorAll(".toggle-password");
 
   // 1. Funcionalidade de Mostrar/Esconder Senha
   togglePasswordIcons.forEach(icon => {
-    icon.addEventListener('click', function() {
+    icon.addEventListener("click", function() {
       const input = this.previousElementSibling;
-      const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-      input.setAttribute('type', type);
-      this.classList.toggle('fa-eye');
-      this.classList.toggle('fa-eye-slash');
+      const type = input.getAttribute("type") === "password" ? "text" : "password";
+      input.setAttribute("type", type);
+      this.classList.toggle("fa-eye");
+      this.classList.toggle("fa-eye-slash");
     });
   });
 
@@ -22,87 +22,92 @@ document.addEventListener('DOMContentLoaded', function() {
   function validarSenhas() {
     if (senhaInput.value && confirmarSenhaInput.value) {
       if (senhaInput.value !== confirmarSenhaInput.value) {
-        senhaFeedback.textContent = 'As senhas não coincidem.';
-        confirmarSenhaInput.setCustomValidity('As senhas não coincidem.');
+        senhaFeedback.textContent = "As senhas não coincidem.";
+        confirmarSenhaInput.setCustomValidity("As senhas não coincidem.");
       } else {
-        senhaFeedback.textContent = '';
-        confirmarSenhaInput.setCustomValidity('');
+        senhaFeedback.textContent = "";
+        confirmarSenhaInput.setCustomValidity("");
       }
     }
   }
-  senhaInput.addEventListener('input', validarSenhas);
-  confirmarSenhaInput.addEventListener('input', validarSenhas);
+  senhaInput.addEventListener("input", validarSenhas);
+  confirmarSenhaInput.addEventListener("input", validarSenhas);
 
   // 3. Máscara e Autopreenchimento de CEP
-  cepInput.addEventListener('input', (e) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
-    value = value.replace(/^(\d{5})(\d)/, '$1-$2'); // Adiciona o hífen
-    e.target.value = value;
+  if (cepInput) {
+    cepInput.addEventListener("input", (e) => {
+      let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é dígito
+      value = value.replace(/^(\d{5})(\d)/, "$1-$2"); // Adiciona o hífen
+      e.target.value = value;
 
-    if (value.length === 9) { // CEP completo
-      buscarCep(value);
-    }
-  });
+      if (value.length === 9) { // CEP completo
+        buscarCep(value);
+      }
+    });
+  }
 
   async function buscarCep(cep) {
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/` );
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
 
       if (!data.erro) {
-        ruaInput.value = data.logradouro;
-        // Poderia preencher bairro, cidade, etc. se tivesse os campos
-        document.getElementById('numero').focus(); // Move o foco para o número
+        if (ruaInput) ruaInput.value = data.logradouro;
+        const numeroInput = document.getElementById("numero");
+        if (numeroInput) numeroInput.focus(); // Move o foco para o número
       } else {
-        alert('CEP não encontrado.');
-        ruaInput.value = '';
+        alert("CEP não encontrado.");
+        if (ruaInput) ruaInput.value = "";
       }
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
+      console.error("Erro ao buscar CEP:", error);
     }
   }
 
-  // 4. Submissão do Formulário (seu código original, com pequenas melhorias)
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    if (senhaInput.value !== confirmarSenhaInput.value) {
-      alert("As senhas não coincidem! Por favor, verifique.");
-      return;
-    }
-
-    // Lógica de carregamento
-    const submitBtn = form.querySelector('.submit-btn');
-    const btnText = submitBtn.querySelector('.btn-text');
-    const btnLoader = submitBtn.querySelector('.btn-loader');
-    btnText.style.display = 'none';
-    btnLoader.style.display = 'block';
-    submitBtn.disabled = true;
-
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-      const response = await fetch('/cadastro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        alert('✅ Conta criada com sucesso!');
-        window.location.href = '/login';
-      } else {
-        alert(`⚠️ ${result.message || 'Erro ao cadastrar. Verifique os dados.'}`);
+  // 4. Submissão do Formulário
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      if (senhaInput.value !== confirmarSenhaInput.value) {
+        alert("As senhas não coincidem! Por favor, verifique.");
+        return;
       }
-    } catch (error) {
-      alert('❌ Erro de conexão com o servidor.');
-      console.error(error);
-    } finally {
-      btnText.style.display = 'block';
-      btnLoader.style.display = 'none';
-      submitBtn.disabled = false;
-    }
-  });
+
+      // Lógica de carregamento
+      const submitBtn = form.querySelector(".btn-cadastro-submit"); // Alterado para a nova classe
+      const btnText = submitBtn.querySelector(".btn-text");
+      const btnLoader = submitBtn.querySelector(".btn-loader");
+      if (btnText) btnText.style.display = "none";
+      if (btnLoader) btnLoader.style.display = "block";
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch("/cadastro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert("✅ Conta criada com sucesso!");
+          window.location.href = "/login";
+        } else {
+          alert(`⚠️ ${result.message || "Erro ao cadastrar. Verifique os dados."}`);
+        }
+      } catch (error) {
+        alert("❌ Erro de conexão com o servidor.");
+        console.error(error);
+      } finally {
+        if (btnText) btnText.style.display = "block";
+        if (btnLoader) btnLoader.style.display = "none";
+        submitBtn.disabled = false;
+      }
+    });
+  }
 });
+

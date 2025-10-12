@@ -5,87 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cadastro - Biblioteca Online</title>
   
-  <!-- 1. Ícone da página (Favicon) -->
-  <link rel="icon" href="{{ url_for('static', filename='img/library_icon.png') }}" type="image/png">
-  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastro.css') }}">
+  <link rel="icon" href="{{ url_for("static", filename="img/library_icon.png") }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/cadastro.css") }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-  <div class="container">
-    <div class="left-side">
-      <!-- 2. Título com o ícone da biblioteca -->
-      <div class="header-logo">
-        <img src="{{ url_for('static', filename='img/library_icon.png' ) }}" alt="Ícone da Biblioteca">
-        <h1>Biblioteca Online</h1>
+  <!-- Cabeçalho -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <img src="{{ url_for("static", filename="img/library_icon.png") }}" alt="Ícone da Biblioteca">
+        <span>Biblioteca Online</span>
       </div>
-      <p>
-        Bem-vindo ao sistema de gerenciamento inteligente de livros e usuários.
-      </p>
-      <!-- 3. Imagem da pessoa lendo -->
-      <img class="illustration" src="{{ url_for('static', filename='img/reading_person.png') }}" alt="Pessoa lendo um livro">
+      <nav class="nav-buttons">
+        <a href="/" class="btn btn-home">
+          <i class="fas fa-home"></i> Início
+        </a>
+        <a href="/login" class="btn btn-login">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Seção de Cadastro -->
+  <section class="cadastro-section">
+    <div class="cadastro-container">
+      <div class="cadastro-card">
+        <div class="cadastro-header">
+          <div class="cadastro-icon">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <h1>Crie sua conta</h1>
+          <p>Preencha os dados abaixo para se cadastrar</p>
+        </div>
+
+        <form id="cadastroForm" method="POST" action="/cadastro" novalidate>
+          <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+          </div>
+
+          <div class="form-group password-wrapper">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" name="senha" placeholder="Crie uma senha forte" required>
+            <i class="fa fa-eye-slash toggle-password"></i>
+          </div>
+
+          <div class="form-group password-wrapper">
+            <label for="confirmar_senha">Confirmar Senha</label>
+            <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Confirme sua senha" required>
+            <i class="fa fa-eye-slash toggle-password"></i>
+          </div>
+          <small id="senha-feedback" class="feedback-error"></small>
+
+          <fieldset class="endereco-fieldset">
+              <legend>Endereço (Opcional)</legend>
+              <div class="endereco-container">
+                  <div class="form-group">
+                      <label for="cep">CEP</label>
+                      <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9">
+                  </div>
+                  <div class="form-group">
+                      <label for="rua">Rua</label>
+                      <input type="text" id="rua" name="rua" placeholder="Preenchido automaticamente" readonly>
+                  </div>
+                  <div class="form-group">
+                      <label for="numero">Número</label>
+                      <input type="text" id="numero" name="numero" placeholder="123">
+                  </div>
+                  <div class="form-group">
+                      <label for="complemento">Complemento</label>
+                      <input type="text" id="complemento" name="complemento" placeholder="Apto, bloco...">
+                  </div>
+              </div>
+          </fieldset>
+
+          <button type="submit" class="btn btn-cadastro-submit">
+            <span class="btn-text">Criar Conta</span>
+            <div class="btn-loader" style="display:none;"></div>
+          </button>
+
+          <p class="login-link">Já tem uma conta? <a href="/login">Faça login</a></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rodapé -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <img src="{{ url_for("static", filename="img/library_icon.png") }}" alt="Ícone da Biblioteca">
+          <span>Biblioteca Online</span>
+        </div>
+        <p>Sistema de gerenciamento inteligente de livros e usuários.</p>
+      </div>
+
+      <div class="footer-section">
+        <h4>Links Rápidos</h4>
+        <ul>
+          <li><a href="/cadastro">Cadastrar</a></li>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/">Início</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Contato</h4>
+        <ul>
+          <li><i class="fas fa-envelope"></i> contato@biblioteca.com</li>
+          <li><i class="fas fa-phone"></i> (71) 9999-9999</li>
+          <li><i class="fas fa-map-marker-alt"></i> Salvador - BA</li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Redes Sociais</h4>
+        <div class="social-links">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        </div>
+      </div>
     </div>
 
-    <div class="right-side">
-      <h2>Crie sua conta</h2>
-      <form id="cadastroForm" method="POST" action="/cadastro" novalidate>
-        
-        <!-- Agrupando label e input para melhor controle -->
-        <div class="form-group">
-          <label for="nome">Nome Completo</label>
-          <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
-        </div>
-
-        <div class="form-group">
-          <label for="email">E-mail</label>
-          <input type="email" id="email" name="email" placeholder="seu@email.com" required>
-        </div>
-
-        <div class="form-group password-wrapper">
-          <label for="senha">Senha</label>
-          <input type="password" id="senha" name="senha" placeholder="Crie uma senha forte" required>
-          <i class="fa fa-eye-slash toggle-password"></i>
-        </div>
-
-        <div class="form-group password-wrapper">
-          <label for="confirmar_senha">Confirmar Senha</label>
-          <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Confirme sua senha" required>
-          <i class="fa fa-eye-slash toggle-password"></i>
-        </div>
-        <small id="senha-feedback" class="feedback-error"></small>
-
-        <fieldset class="endereco-fieldset">
-            <legend>Endereço (Opcional)</legend>
-            <div class="endereco-container">
-                <div class="form-group">
-                    <label for="cep">CEP</label>
-                    <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9">
-                </div>
-                <div class="form-group">
-                    <label for="rua">Rua</label>
-                    <input type="text" id="rua" name="rua" placeholder="Preenchido automaticamente" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="numero">Número</label>
-                    <input type="text" id="numero" name="numero" placeholder="123">
-                </div>
-                <div class="form-group">
-                    <label for="complemento">Complemento</label>
-                    <input type="text" id="complemento" name="complemento" placeholder="Apto, bloco...">
-                </div>
-            </div>
-        </fieldset>
-
-        <button type="submit" class="submit-btn">
-          <span class="btn-text">Criar Conta</span>
-          <div class="btn-loader" style="display:none;"></div>
-        </button>
-
-        <p class="login-link">Já tem uma conta? <a href="/login">Faça login</a></p>
-      </form>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Biblioteca Online - Centro Universitário Jorge Amado (UNIJORGE)</p>
+      <p>Desenvolvido por: Anselmo André, Guilherme Victor, Igor Santos, Miguel Moreira, Ruan Barbosa</p>
     </div>
-  </div>
+  </footer>
 
-  <script src="{{ url_for('static', filename='js/cadastro.js') }}"></script>
+  <script src="{{ url_for("static", filename="js/cadastro.js") }}"></script>
 </body>
 </html>
+

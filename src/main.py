@@ -32,9 +32,8 @@ def cadastro():
 
 @app.route('/login')
 def login():
-    """Renderiza a página de login (a ser implementada)"""
-    # TODO: Criar a página de login
-    return redirect('/cadastro')
+    """Renderiza a página de login"""
+    return render_template('login.html')
 
 
 if __name__ == '__main__':
