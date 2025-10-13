@@ -7,10 +7,14 @@ from src.config import SECRET_KEY, DEBUG
 # Não altere esta linha
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+# Define o caminho base do projeto (TESTE2-MAIN)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+
 app = Flask(
     __name__,
-    static_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static'),
-    template_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
+    static_folder=os.path.join(BASE_DIR, 'static'),
+    static_url_path='/static',  # Adicionado para garantir o mapeamento correto
+    template_folder=os.path.join(BASE_DIR, 'templates')
 )
 app.config['SECRET_KEY'] = SECRET_KEY
 
