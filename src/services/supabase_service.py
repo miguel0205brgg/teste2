@@ -81,7 +81,7 @@ class SupabaseService:
                 'error': str(e),
                 'message': 'Erro ao criar leitor'
             }
-      def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
+    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
         """Cadastra um usuário completo (usuario + leitor se for tipo \'usuario\')"""
         try:
             usuario_result = self.criar_usuario(nome, email, senha=senha, role=\'usuario\', supabase_auth_id=None)            
