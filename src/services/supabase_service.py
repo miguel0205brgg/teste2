@@ -2,6 +2,7 @@ from supabase import create_client, Client
 from src.config import SUPABASE_URL, SUPABASE_KEY
 import bcrypt
 from datetime import datetime, timedelta
+import secrets
 
 class SupabaseService:
     def __init__(self):
@@ -27,7 +28,7 @@ class SupabaseService:
             result = self.supabase.table('usuario').insert({
                 'nome': nome,
                 'email': email,
-                'senha': senha_hash if senha else None,
+                'senha': senha_hash,
                 'role': role,
                 'supabase_auth_id': supabase_auth_id
             }).execute()
@@ -55,10 +56,10 @@ class SupabaseService:
                 }
             else:
                 return {
-                'success': False,
-                'error': error_message,
-                'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
-            }
+                    'success': False,
+                    'error': error_message,
+                    'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
+                }
     
     def criar_leitor(self, usuario_id: int, endereco: str = None, telefone: str = None, email: str = None):
         """Cria um registro de leitor vinculado ao usuário"""
@@ -81,10 +82,11 @@ class SupabaseService:
                 'error': str(e),
                 'message': 'Erro ao criar leitor'
             }
+
     def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
-        """Cadastra um usuário completo (usuario + leitor se for tipo \'usuario\')"""
+        """Cadastra um usuário completo (usuario + leitor)"""
         try:
-            usuario_result = self.criar_usuario(nome, email, senha=senha, role=\'usuario\', supabase_auth_id=None)            
+            usuario_result = self.criar_usuario(nome, email, senha=senha, role='usuario', supabase_auth_id=None)            
             if not usuario_result['success']:
                 return usuario_result
             
@@ -175,18 +177,15 @@ class SupabaseService:
             existing_user = self.supabase.table("usuario").select("*").eq("email", email).execute()
 
             if existing_user.data:
-                # Usuário já existe, atualiza o supabase_auth_id se for diferente
                 user_data = existing_user.data[0]
                 if user_data.get("supabase_auth_id") != supabase_auth_id:
                     self.supabase.table("usuario").update({"supabase_auth_id": supabase_auth_id}).eq("id", user_data["id"]).execute()
                 return {"success": True, "data": user_data, "message": "Usuário OAuth encontrado."}
             else:
-                # Usuário não existe, cria um novo
-                # Para usuários OAuth, não há senha local, então podemos usar um placeholder ou marcar como OAuth
                 new_user_result = self.supabase.table("usuario").insert({
                     "nome": name,
                     "email": email,
-                    "role": "usuario", # Role padrão para usuários OAuth
+                    "role": "usuario",
                     "supabase_auth_id": supabase_auth_id
                 }).execute()
                 if new_user_result.data:
@@ -225,10 +224,7 @@ class SupabaseService:
         try:
             user_result = self.supabase.table("usuario").select("id").eq("email", email).execute()
             if not user_result.data:
-                return {
-                    "success": False,
-                    "message": "Usuário não encontrado."
-                }
+                return {"success": False, "message": "Usuário não encontrado."}
             
             usuario_id = user_result.data[0]["id"]
             token = secrets.token_urlsafe(32)
@@ -243,23 +239,12 @@ class SupabaseService:
             }).execute()
 
             if insert_result.data:
-                return {
-                    "success": True,
-                    "token": token,
-                    "message": "Token de reset de senha gerado com sucesso."
-                }
+                return {"success": True, "token": token, "message": "Token de reset de senha gerado com sucesso."}
             else:
-                return {
-                    "success": False,
-                    "message": "Erro ao gerar token de reset de senha."
-                }
+                return {"success": False, "message": "Erro ao gerar token de reset de senha."}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Erro interno ao gerar token de reset de senha."
-            }
+            return {"success": False, "error": str(e), "message": "Erro interno ao gerar token de reset de senha."}
 
     def validar_token_reset_senha(self, token: str):
         """Valida um token de reset de senha e retorna o id do usuário se for válido"""
@@ -267,35 +252,20 @@ class SupabaseService:
             result = self.supabase.table("reset_senha").select("id_usuario, expiracao, criado_em").eq("token", token).execute()
             
             if not result.data:
-                return {
-                    "success": False,
-                    "message": "Token inválido ou expirado."
-                }
+                return {"success": False, "message": "Token inválido ou expirado."}
             
             token_data = result.data[0]
-            criado_em_str = token_data["criado_em"]
-            criado_em = datetime.fromisoformat(criado_em_str.replace("Z", "+00:00"))
+            criado_em = datetime.fromisoformat(token_data["criado_em"].replace("Z", "+00:00"))
             expiracao_segundos = token_data["expiracao"]
             
             if datetime.now(criado_em.tzinfo) > criado_em + timedelta(seconds=expiracao_segundos):
                 self.supabase.table("reset_senha").delete().eq("token", token).execute()
-                return {
-                    "success": False,
-                    "message": "Token inválido ou expirado."
-                }
+                return {"success": False, "message": "Token inválido ou expirado."}
             
-            return {
-                "success": True,
-                "id_usuario": token_data["id_usuario"],
-                "message": "Token válido."
-            }
+            return {"success": True, "id_usuario": token_data["id_usuario"], "message": "Token válido."}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Erro interno ao validar token de reset de senha."
-            }
+            return {"success": False, "error": str(e), "message": "Erro interno ao validar token de reset de senha."}
 
     def resetar_senha(self, token: str, nova_senha: str):
         """Reseta a senha do usuário após validação do token"""
@@ -311,20 +281,9 @@ class SupabaseService:
             
             if update_result.data:
                 self.supabase.table("reset_senha").delete().eq("token", token).execute()
-                return {
-                    "success": True,
-                    "message": "Senha resetada com sucesso."
-                }
+                return {"success": True, "message": "Senha resetada com sucesso."}
             else:
-                return {
-                    "success": False,
-                    "message": "Erro ao resetar a senha."
-                }
+                return {"success": False, "message": "Erro ao resetar a senha."}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Erro interno ao resetar a senha."
-            }
-
+            return {"success": False, "error": str(e), "message": "Erro interno ao resetar a senha."}
