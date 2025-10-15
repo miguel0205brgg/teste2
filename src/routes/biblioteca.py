@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, session
+_from flask import Blueprint, jsonify, request, session, redirect
 from src.services.supabase_service import SupabaseService
 
 biblioteca_bp = Blueprint('biblioteca', __name__)
@@ -56,7 +56,6 @@ def cadastrar_usuario():
             nome=data["nome"],
             email=data["email"],
             senha=data["senha"],
-            role="usuario",  # Força a role para 'usuario'
             endereco=endereco_completo,
             telefone=data.get("telefone")
         )
@@ -232,3 +231,60 @@ def resetar_senha():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "message": "Erro interno do servidor."}), 500
+
+@biblioteca_bp.route("/login/google")
+def login_google():
+    """Redireciona para a página de autenticação do Google."""
+    result = supabase_service.autenticar_com_oauth(provider="google")
+    if result['success']:
+        return redirect(result['redirect_url'])
+    else:
+        return jsonify(result), 500
+
+@biblioteca_bp.route("/auth/callback")
+def auth_callback():
+    """Lida com o callback do provedor OAuth."""
+    # Esta rota é um placeholder para o frontend lidar com a extração dos tokens.
+    return render_template("callback.html")
+
+@biblioteca_bp.route("/set_token", methods=["POST"])
+def set_token():
+    """Recebe os tokens OAuth do frontend e estabelece a sessão do usuário."""
+    try:
+        data = request.json
+        access_token = data.get("access_token")
+        refresh_token = data.get("refresh_token")
+
+        if not access_token or not refresh_token:
+            return jsonify({"success": False, "message": "Tokens de autenticação não recebidos."}), 400
+
+        # Tenta obter informações do usuário do Supabase usando o access_token
+        user_response = supabase_service.supabase.auth.get_user(access_token)
+
+        if user_response.user:
+            user_email = user_response.user.email
+            user_name = user_response.user.user_metadata.get("full_name", user_response.user.email)
+            supabase_auth_id = user_response.user.id
+
+            # Usa o método do serviço para obter ou criar o usuário na nossa tabela local
+            user_processing_result = supabase_service.get_or_create_oauth_user(user_email, user_name, supabase_auth_id)
+
+            if user_processing_result["success"]:
+                usuario_id = user_processing_result["data"]["id"]
+                # Salva os dados do usuário na sessão do Flask
+                session["usuario_id"] = usuario_id
+                session["usuario_role"] = "usuario"
+                session["usuario_nome"] = user_name
+                session["access_token"] = access_token
+                session["refresh_token"] = refresh_token
+
+                # Retorna a URL de redirecionamento para o frontend
+                return jsonify({"success": True, "redirect_url": "/dashboard-usuario"}), 200
+            else:
+                return jsonify(user_processing_result), 400
+        else:
+            return jsonify({"success": False, "message": "Não foi possível obter informações do usuário do Supabase com o token fornecido."}), 400
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "message": "Erro interno do servidor ao processar tokens OAuth."}), 500
+

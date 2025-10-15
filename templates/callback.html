@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticando...</title>
+    <script>
+        // Função para extrair parâmetros do hash da URL
+        function getHashParams() {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+                q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+               hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
+        }
+
+        // Ao carregar a página, extrai os tokens e os envia para o backend
+        window.onload = function() {
+            var params = getHashParams();
+            if (params.access_token && params.refresh_token) {
+                // Envia os tokens para o backend para criar a sessão
+                fetch("/api/set_token", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        access_token: params.access_token,
+                        refresh_token: params.refresh_token
+                    })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          // Redireciona para o dashboard ou página principal
+                          window.location.href = data.redirect_url;
+                      } else {
+                          // Exibe uma mensagem de erro
+                          document.body.innerHTML = "<h1>Erro na autenticação</h1><p>" + data.message + "</p>";
+                      }
+                  });
+            } else {
+                // Exibe uma mensagem de erro se os tokens não estiverem presentes
+                document.body.innerHTML = "<h1>Erro na autenticação</h1><p>Tokens de acesso não encontrados.</p>";
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>Autenticando...</h1>
+</body>
+</html>
+
