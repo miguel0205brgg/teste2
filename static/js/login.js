@@ -68,9 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const facebookBtn = document.querySelector('.btn-facebook');
 
   if (googleBtn) {
-    googleBtn.addEventListener(\'click\', function(e) {
+    googleBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      window.location.href = \'/api/login/google\'; // Redireciona para a rota do backend que inicia o OAuth
+      window.location.href = '/login/google'; // Redireciona para a rota do backend que inicia o OAuth
     });
   }
 
