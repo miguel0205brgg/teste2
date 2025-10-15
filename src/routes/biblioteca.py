@@ -1,4 +1,4 @@
-_from flask import Blueprint, jsonify, request, session, redirect
+from flask import Blueprint, jsonify, request, session, redirect
 from src.services.supabase_service import SupabaseService
 
 biblioteca_bp = Blueprint('biblioteca', __name__)
