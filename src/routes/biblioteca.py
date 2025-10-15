@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session, redirect
 from src.services.supabase_service import SupabaseService
 
-biblioteca_bp = Blueprint('biblioteca', __name__)
+biblioteca_bp = Blueprint('biblioteca', __name__, url_prefix='/api')
 supabase_service = SupabaseService()
 
 @biblioteca_bp.route('/cadastro', methods=['POST'])
