@@ -20,7 +20,7 @@ class SupabaseService:
         except:
             return False
     
-    def criar_usuario(self, nome: str, email: str, senha: str = None, role: str = "usuario", supabase_auth_id: str = None):
+    def criar_usuario(self, nome: str, email: str, senha: str = None, role: str = "usuario", google_id: str = None):
         """Cria um novo usuário na tabela usuario"""
         try:
             senha_hash = self.hash_password(senha) if senha else None
@@ -29,8 +29,8 @@ class SupabaseService:
                 'nome': nome,
                 'email': email,
                 'senha': senha_hash,
-                'role': role,
-                'supabase_auth_id': supabase_auth_id
+                  'perfil': role,
+                'google_id': google_id
             }).execute()
             
             return {
@@ -47,11 +47,11 @@ class SupabaseService:
                     'message': 'Este e-mail já está cadastrado. Por favor, use outro e-mail.',
                     'error': error_message
                 }
-            elif "duplicate key value violates unique constraint" in error_message and "supabase_auth_id" in error_message:
+            elif "duplicate key value violates unique constraint" in error_message and "google_id" in error_message:
                 return {
                     'success': False,
-                    'field': 'supabase_auth_id',
-                    'message': 'Este ID de autenticação Supabase já está em uso.',
+                    'field': 'google_id',
+                    'message': 'Este Google ID já está em uso.',
                     'error': error_message
                 }
             else:
@@ -171,22 +171,22 @@ class SupabaseService:
                 'message': f'Erro ao iniciar autenticação OAuth com {provider}.'
             }
     
-    def get_or_create_oauth_user(self, email: str, name: str, supabase_auth_id: str):
+    def get_or_create_oauth_user(self, email: str, name: str, google_id: str):
         """Verifica se um usuário OAuth existe na tabela 'usuario' e o cria se não existir."""
         try:
             existing_user = self.supabase.table("usuario").select("*").eq("email", email).execute()
 
             if existing_user.data:
                 user_data = existing_user.data[0]
-                if user_data.get("supabase_auth_id") != supabase_auth_id:
-                    self.supabase.table("usuario").update({"supabase_auth_id": supabase_auth_id}).eq("id", user_data["id"]).execute()
+                if user_data.get("google_id") != google_id:
+                    self.supabase.table("usuario").update({"google_id": google_id}).eq("id", user_data["id"]).execute()
                 return {"success": True, "data": user_data, "message": "Usuário OAuth encontrado."}
             else:
                 new_user_result = self.supabase.table("usuario").insert({
                     "nome": name,
                     "email": email,
-                    "role": "usuario",
-                    "supabase_auth_id": supabase_auth_id
+                    "perfil": "usuario",
+                    "google_id": google_id
                 }).execute()
                 if new_user_result.data:
                     return {"success": True, "data": new_user_result.data[0], "message": "Usuário OAuth criado com sucesso."}
