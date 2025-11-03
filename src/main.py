@@ -34,10 +34,20 @@ def cadastro():
     return render_template('cadastro.html')
 
 
-@app.route('/login')
+@app.route("/login")
 def login():
     """Renderiza a página de login"""
-    return render_template('login.html')
+    return render_template("login.html")
+
+@app.route("/biblioteca")
+def biblioteca():
+    """Renderiza a página da biblioteca após o login"""
+    return render_template("biblioteca.html")
+
+@app.route("/dashboard-dev")
+def dashboard_dev():
+    """Renderiza a página de dashboard de desenvolvedor"""
+    return render_template("dashboard_dev.html")
 
 
 if __name__ == '__main__':

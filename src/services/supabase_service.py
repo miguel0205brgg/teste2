@@ -1,36 +1,38 @@
 from supabase import create_client, Client
 from src.config import SUPABASE_URL, SUPABASE_KEY
-import bcrypt
-from datetime import datetime, timedelta
+import hashlib
 import secrets
+from datetime import datetime, timedelta
 
 class SupabaseService:
     def __init__(self):
         self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     
     def hash_password(self, password: str) -> str:
-        """Hash da senha usando bcrypt"""
-        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        return hashed.decode('utf-8')
+        """Hash da senha usando SHA-256 com salt"""
+        salt = secrets.token_hex(16)
+        password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+        return f"{salt}:{password_hash}"
     
     def verify_password(self, password: str, hashed: str) -> bool:
-        """Verifica se a senha está correta usando bcrypt"""
+        """Verifica se a senha está correta"""
         try:
-            return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+            salt, password_hash = hashed.split(":")
+            return hashlib.sha256((password + salt).encode()).hexdigest() == password_hash
         except:
             return False
     
-    def criar_usuario(self, nome: str, email: str, senha: str = None, role: str = "usuario", google_id: str = None):
+    def criar_usuario(self, nome: str, email: str, senha: str, perfil: str = "usuario"):
         """Cria um novo usuário na tabela usuario"""
+        print(f"[DEBUG SUPABASE] Tentando criar usuário: nome={nome}, email={email}, perfil={perfil}")
         try:
-            senha_hash = self.hash_password(senha) if senha else None
+            senha_hash = self.hash_password(senha)
             
             result = self.supabase.table('usuario').insert({
                 'nome': nome,
                 'email': email,
                 'senha': senha_hash,
-                  'perfil': role,
-                'google_id': google_id
+                'perfil': perfil
             }).execute()
             
             return {
@@ -47,22 +49,15 @@ class SupabaseService:
                     'message': 'Este e-mail já está cadastrado. Por favor, use outro e-mail.',
                     'error': error_message
                 }
-            elif "duplicate key value violates unique constraint" in error_message and "google_id" in error_message:
-                return {
-                    'success': False,
-                    'field': 'google_id',
-                    'message': 'Este Google ID já está em uso.',
-                    'error': error_message
-                }
-            else:
-                return {
-                    'success': False,
-                    'error': error_message,
-                    'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
-                }
+            return {
+                'success': False,
+                'error': error_message,
+                'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
+            }
     
     def criar_leitor(self, usuario_id: int, endereco: str = None, telefone: str = None, email: str = None):
         """Cria um registro de leitor vinculado ao usuário"""
+        print(f"[DEBUG SUPABASE] Tentando criar leitor: usuario_id={usuario_id}, endereco={endereco}, telefone={telefone}, email={email}")
         try:
             result = self.supabase.table('leitor').insert({
                 'id_usuario': usuario_id,
@@ -82,11 +77,12 @@ class SupabaseService:
                 'error': str(e),
                 'message': 'Erro ao criar leitor'
             }
-
+    
     def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
-        """Cadastra um usuário completo (usuario + leitor)"""
+        """Cadastra um usuário completo (usuario + leitor se for tipo 'usuario')"""
         try:
-            usuario_result = self.criar_usuario(nome, email, senha=senha, role='usuario', supabase_auth_id=None)            
+            usuario_result = self.criar_usuario(nome, email, senha, perfil='usuario')
+            
             if not usuario_result['success']:
                 return usuario_result
             
@@ -131,18 +127,18 @@ class SupabaseService:
             
             usuario = result.data[0]
             
-            if self.verify_password(senha, usuario['senha']):
-                del usuario['senha']
+            if self.verify_password(senha, usuario["senha"]):
+                del usuario["senha"]
                 return {
-                    'success': True,
-                    'data': usuario,
-                    'message': 'Login realizado com sucesso'
+                    "success": True,
+                    "data": usuario,
+                    "message": "Login realizado com sucesso"
                 }
             else:
                 return {
-                    'success': False,
-                    'field': 'senha',
-                    'message': 'Senha incorreta. Por favor, tente novamente.'
+                    "success": False,
+                    "field": "senha",
+                    "message": "Senha incorreta. Por favor, tente novamente."
                 }
                 
         except Exception as e:
@@ -151,65 +147,22 @@ class SupabaseService:
                 'error': str(e),
                 'message': 'Erro ao autenticar usuário'
             }
-
-    def autenticar_com_oauth(self, provider: str = "google", redirect_to: str = None):
-        """Inicia o fluxo de autenticação OAuth com um provedor específico e retorna a URL de redirecionamento."""
-        try:
-            auth_url = f"{SUPABASE_URL}/auth/v1/authorize?provider={provider}"
-            if redirect_to:
-                auth_url += f"&redirect_to={redirect_to}"
-
-            return {
-                'success': True,
-                'redirect_url': auth_url,
-                'message': f'Redirecione o usuário para {auth_url} para iniciar o login com {provider}.'
-            }
-        except Exception as e:
-            return {
-                'success': False,
-                'error': str(e),
-                'message': f'Erro ao iniciar autenticação OAuth com {provider}.'
-            }
     
-    def get_or_create_oauth_user(self, email: str, name: str, google_id: str):
-        """Verifica se um usuário OAuth existe na tabela 'usuario' e o cria se não existir."""
-        try:
-            existing_user = self.supabase.table("usuario").select("*").eq("email", email).execute()
-
-            if existing_user.data:
-                user_data = existing_user.data[0]
-                if user_data.get("google_id") != google_id:
-                    self.supabase.table("usuario").update({"google_id": google_id}).eq("id", user_data["id"]).execute()
-                return {"success": True, "data": user_data, "message": "Usuário OAuth encontrado."}
-            else:
-                new_user_result = self.supabase.table("usuario").insert({
-                    "nome": name,
-                    "email": email,
-                    "perfil": "usuario",
-                    "google_id": google_id
-                }).execute()
-                if new_user_result.data:
-                    return {"success": True, "data": new_user_result.data[0], "message": "Usuário OAuth criado com sucesso."}
-                else:
-                    return {"success": False, "message": "Erro ao criar usuário OAuth na tabela local."}
-        except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao processar usuário OAuth."}
-
     def buscar_usuario_por_id(self, usuario_id: int):
         """Busca um usuário pelo ID"""
         try:
-            result = self.supabase.table('usuario').select('id, nome, email, role, criado_em').eq('id', usuario_id).execute()
+            result = self.supabase.table("usuario").select("id, nome, email, perfil, criado_em").eq("id", usuario_id).execute()
             
             if not result.data:
                 return {
-                    'success': False,
-                    'message': 'Usuário não encontrado'
+                    "success": False,
+                    "message": "Usuário não encontrado"
                 }
             
             return {
-                'success': True,
-                'data': result.data[0],
-                'message': 'Usuário encontrado'
+                "success": True,
+                "data": result.data[0],
+                "message": "Usuário encontrado"
             }
             
         except Exception as e:
@@ -224,11 +177,14 @@ class SupabaseService:
         try:
             user_result = self.supabase.table("usuario").select("id").eq("email", email).execute()
             if not user_result.data:
-                return {"success": False, "message": "Usuário não encontrado."}
+                return {
+                    "success": False,
+                    "message": "Usuário não encontrado."
+                }
             
             usuario_id = user_result.data[0]["id"]
             token = secrets.token_urlsafe(32)
-            expiracao = 3600
+            expiracao = datetime.now() + timedelta(hours=1) # Expira em 1 hora
 
             self.supabase.table("reset_senha").delete().eq("id_usuario", usuario_id).execute()
 
@@ -239,12 +195,23 @@ class SupabaseService:
             }).execute()
 
             if insert_result.data:
-                return {"success": True, "token": token, "message": "Token de reset de senha gerado com sucesso."}
+                return {
+                    "success": True,
+                    "token": token,
+                    "message": "Token de reset de senha gerado com sucesso."
+                }
             else:
-                return {"success": False, "message": "Erro ao gerar token de reset de senha."}
+                return {
+                    "success": False,
+                    "message": "Erro ao gerar token de reset de senha."
+                }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro interno ao gerar token de reset de senha."}
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Erro interno ao gerar token de reset de senha."
+            }
 
     def validar_token_reset_senha(self, token: str):
         """Valida um token de reset de senha e retorna o id do usuário se for válido"""
@@ -252,20 +219,35 @@ class SupabaseService:
             result = self.supabase.table("reset_senha").select("id_usuario, expiracao, criado_em").eq("token", token).execute()
             
             if not result.data:
-                return {"success": False, "message": "Token inválido ou expirado."}
+                return {
+                    "success": False,
+                    "message": "Token inválido ou expirado."
+                }
             
             token_data = result.data[0]
-            criado_em = datetime.fromisoformat(token_data["criado_em"].replace("Z", "+00:00"))
+            criado_em_str = token_data["criado_em"]
+            criado_em = datetime.fromisoformat(criado_em_str.replace("Z", "+00:00"))
             expiracao_segundos = token_data["expiracao"]
             
             if datetime.now(criado_em.tzinfo) > criado_em + timedelta(seconds=expiracao_segundos):
                 self.supabase.table("reset_senha").delete().eq("token", token).execute()
-                return {"success": False, "message": "Token inválido ou expirado."}
+                return {
+                    "success": False,
+                    "message": "Token inválido ou expirado."
+                }
             
-            return {"success": True, "id_usuario": token_data["id_usuario"], "message": "Token válido."}
+            return {
+                "success": True,
+                "id_usuario": token_data["id_usuario"],
+                "message": "Token válido."
+            }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro interno ao validar token de reset de senha."}
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Erro interno ao validar token de reset de senha."
+            }
 
     def resetar_senha(self, token: str, nova_senha: str):
         """Reseta a senha do usuário após validação do token"""
@@ -281,9 +263,19 @@ class SupabaseService:
             
             if update_result.data:
                 self.supabase.table("reset_senha").delete().eq("token", token).execute()
-                return {"success": True, "message": "Senha resetada com sucesso."}
+                return {
+                    "success": True,
+                    "message": "Senha resetada com sucesso."
+                }
             else:
-                return {"success": False, "message": "Erro ao resetar a senha."}
+                return {
+                    "success": False,
+                    "message": "Erro ao resetar a senha."
+                }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro interno ao resetar a senha."}
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Erro interno ao resetar a senha."
+            }

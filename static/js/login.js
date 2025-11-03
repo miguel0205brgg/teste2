@@ -45,7 +45,28 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // Se chegou até aqui, o formulário pode ser enviado
-      return true;
+      // return true;
+      e.preventDefault(); // Previne o envio padrão do formulário
+
+      fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email, senha: password }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            window.location.href = data.redirect_url; // Redireciona para a URL fornecida pelo backend
+          } else {
+            alert(data.message || "Erro ao fazer login. Tente novamente.");
+          }
+        })
+        .catch((error) => {
+          console.error("Erro:", error);
+          alert("Erro de conexão. Tente novamente mais tarde.");
+        });
     });
   }
 
@@ -70,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (googleBtn) {
     googleBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      window.location.href = '/api/login/google'; // Redireciona para a rota do backend que inicia o OAuth
+      alert('Funcionalidade de login com Google será implementada em breve!');
     });
   }
 

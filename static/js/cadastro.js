@@ -85,8 +85,14 @@ document.addEventListener("DOMContentLoaded", function() {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
+      // Adicionar campos de endereço ao objeto de dados
+      data.cep = document.getElementById("cep").value;
+      data.numero = document.getElementById("numero").value;
+      data.complemento = document.getElementById("complemento").value;
+      data.telefone = document.getElementById("telefone").value;
+
       try {
-        const response = await fetch("/cadastro", {
+        const response = await fetch("/api/cadastro", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)

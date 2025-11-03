@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Biblioteca Online - Gerenciamento Inteligente</title>
+  
+  <link rel="icon" href="{{ url_for('static', filename='img/library_icon.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_dev.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Sistema de Biblioteca</h1>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="dashboard">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+        <span class="badge badge-green">1</span>
+      </button>
+      <button class="nav-item" data-section="livros">
+        <i class="fas fa-book"></i>
+        <span>Livros</span>
+        <span class="badge badge-blue">2</span>
+      </button>
+      <button class="nav-item" data-section="leitores">
+        <i class="fas fa-users"></i>
+        <span>Leitores</span>
+        <span class="badge badge-orange">3</span>
+      </button>
+      <button class="nav-item" data-section="emprestimos">
+        <i class="fas fa-clock"></i>
+        <span>Empréstimos</span>
+        <span class="badge badge-purple">4</span>
+      </button>
+      <button class="nav-item" data-section="relatorios">
+        <i class="fas fa-file-alt"></i>
+        <span>Relatórios</span>
+        <span class="badge badge-teal">5</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="content-section active">
+      <div class="section-header">
+        <h2>Dashboard</h2>
+        <p>Visão geral do sistema de biblioteca</p>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-book"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Total de Livros</h3>
+            <p class="stat-number">4</p>
+            <p class="stat-detail">3 disponíveis</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Leitores Cadastrados</h3>
+            <p class="stat-number">3</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Empréstimos Ativos</h3>
+            <p class="stat-number">1</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon stat-alert">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Empréstimos Atrasados</h3>
+            <p class="stat-number stat-alert-number">1</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Livros Section -->
+    <section id="livros" class="content-section">
+      <div class="section-header">
+        <h2>Gerenciar Livros</h2>
+        <p>Cadastre, edite e remova livros do acervo (RF01)</p>
+      </div>
+      
+      <div class="form-card">
+        <h3>Cadastrar Novo Livro</h3>
+        <form id="formLivro" class="form-grid">
+          <div class="form-group">
+            <label for="livroTitulo">Título</label>
+            <input type="text" id="livroTitulo" placeholder="Digite o título do livro" required>
+          </div>
+          <div class="form-group">
+            <label for="livroAutor">Autor</label>
+            <input type="text" id="livroAutor" placeholder="Digite o nome do autor" required>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Cadastrar Livro
+          </button>
+        </form>
+      </div>
+      
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchLivros" placeholder="Buscar livros por título ou autor...">
+      </div>
+      
+      <div id="livrosGrid" class="items-grid">
+        <!-- Livros serão carregados aqui dinamicamente -->
+      </div>
+    </section>
+
+    <!-- Leitores Section -->
+    <section id="leitores" class="content-section">
+      <div class="section-header">
+        <h2>Gerenciar Leitores</h2>
+        <p>Cadastre novos leitores com informações de contato (RF02)</p>
+      </div>
+      
+      <div class="form-card">
+        <h3>Cadastrar Novo Leitor</h3>
+        <form id="formLeitor" class="form-grid form-grid-2x2">
+          <div class="form-group">
+            <label for="leitorNome">Nome Completo</label>
+            <input type="text" id="leitorNome" placeholder="Digite o nome completo" required>
+          </div>
+          <div class="form-group">
+            <label for="leitorEmail">E-mail</label>
+            <input type="email" id="leitorEmail" placeholder="Digite o e-mail" required>
+          </div>
+          <div class="form-group">
+            <label for="leitorTelefone">Telefone</label>
+            <input type="tel" id="leitorTelefone" placeholder="Digite o telefone" required>
+          </div>
+          <div class="form-group">
+            <label for="leitorEndereco">Endereço</label>
+            <input type="text" id="leitorEndereco" placeholder="Digite o endereço" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full-width">
+            <i class="fas fa-plus"></i> Cadastrar Leitor
+          </button>
+        </form>
+      </div>
+      
+      <div id="leitoresGrid" class="items-grid">
+        <!-- Leitores serão carregados aqui dinamicamente -->
+      </div>
+    </section>
+
+    <!-- Empréstimos Section -->
+    <section id="emprestimos" class="content-section">
+      <div class="section-header">
+        <h2>Gerenciar Empréstimos</h2>
+        <p>Registre e acompanhe empréstimos de livros</p>
+      </div>
+      
+      <div class="form-card">
+        <h3>Registrar Novo Empréstimo</h3>
+        <form id="formEmprestimo" class="form-grid">
+          <div class="form-group">
+            <label for="emprestimoLivro">Livro</label>
+            <select id="emprestimoLivro" required>
+              <option value="">Selecione um livro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="emprestimoLeitor">Leitor</label>
+            <select id="emprestimoLeitor" required>
+              <option value="">Selecione um leitor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="emprestimoDataDevolucao">Data de Devolução</label>
+            <input type="date" id="emprestimoDataDevolucao" required>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Registrar Empréstimo
+          </button>
+        </form>
+      </div>
+      
+      <div id="emprestimosGrid" class="items-grid">
+        <!-- Empréstimos serão carregados aqui dinamicamente -->
+      </div>
+    </section>
+
+    <!-- Relatórios Section -->
+    <section id="relatorios" class="content-section">
+      <div class="section-header">
+        <h2>Relatórios</h2>
+        <p>Visualize estatísticas e relatórios do sistema</p>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Livros Mais Emprestados</h3>
+          <div id="livrosMaisEmprestados" class="report-list">
+            <!-- Dados serão carregados aqui -->
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>Leitores Mais Ativos</h3>
+          <div id="leitoresMaisAtivos" class="report-list">
+            <!-- Dados serão carregados aqui -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard_dev.js') }}"></script>
+</body>
+</html>
+
