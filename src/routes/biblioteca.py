@@ -238,3 +238,30 @@ def resetar_senha():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "message": "Erro interno do servidor."}), 500
+
+
+@biblioteca_bp.route("/perfil", methods=["GET"])
+def perfil():
+    """Renderiza a página de perfil do usuário logado"""
+    try:
+        # Verificar se o usuário está logado (verificar sessão)
+        usuario_id = session.get("usuario_id")
+        
+        if not usuario_id:
+            # Se não estiver logado, redirecionar para login
+            return redirect("/login")
+        
+        # Buscar dados do usuário no banco de dados
+        usuario = supabase_service.buscar_usuario_por_id(usuario_id)
+        
+        if not usuario or not usuario.get("success"):
+            return redirect("/login")
+        
+        usuario_data = usuario.get("data")
+        
+        # Renderizar template com os dados do usuário
+        return render_template("perfil.html", usuario=usuario_data)
+    
+    except Exception as e:
+        print(f"[ERROR] Erro ao acessar perfil: {str(e)}")
+        return redirect("/login")

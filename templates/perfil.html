@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Perfil - Biblioteca Online</title>
+  
+  <link rel="icon" href="{{ url_for("static", filename="img/library_icon.png") }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/perfil.css") }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="background-container"></div>
+  
+  <!-- Cabeçalho -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <img src="{{ url_for("static", filename="img/library_icon.png" ) }}" alt="Ícone da Biblioteca">
+        <span>Biblioteca Online</span>
+      </div>
+      <nav class="nav-buttons">
+        <a href="/" class="btn btn-home">
+          <i class="fas fa-home"></i> Início
+        </a>
+        <a href="/logout" class="btn btn-logout">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Seção de Perfil -->
+  <section class="perfil-section">
+    <div class="perfil-container">
+      <!-- Card de Informações Pessoais -->
+      <div class="perfil-card">
+        <div class="perfil-header">
+          <div class="avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="header-info">
+            <h1>{{ usuario.nome }}</h1>
+            <p class="email">{{ usuario.email }}</p>
+            <span class="badge badge-{{ usuario.perfil|lower }}">{{ usuario.perfil }}</span>
+          </div>
+        </div>
+
+        <!-- Abas de Informações -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="pessoal">
+            <i class="fas fa-user"></i> Dados Pessoais
+          </button>
+          <button class="tab-btn" data-tab="endereco">
+            <i class="fas fa-map-marker-alt"></i> Endereço
+          </button>
+          <button class="tab-btn" data-tab="seguranca">
+            <i class="fas fa-lock"></i> Segurança
+          </button>
+        </div>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content">
+          <!-- Aba: Dados Pessoais -->
+          <div class="tab-pane active" id="pessoal">
+            <div class="info-group">
+              <label>Nome Completo</label>
+              <div class="info-value">{{ usuario.nome }}</div>
+            </div>
+            
+            <div class="info-group">
+              <label>E-mail</label>
+              <div class="info-value">{{ usuario.email }}</div>
+            </div>
+            
+            <div class="info-group">
+              <label>Tipo de Usuário</label>
+              <div class="info-value">
+                {% if usuario.perfil == 'DEV' %}
+                  <span class="badge badge-dev">Desenvolvedor</span>
+                {% elif usuario.perfil == 'ADMIN' %}
+                  <span class="badge badge-admin">Administrador</span>
+                {% else %}
+                  <span class="badge badge-user">Usuário</span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="info-group">
+              <label>Data de Cadastro</label>
+              <div class="info-value">
+                {% if usuario.criado_em %}
+                  {{ usuario.criado_em|replace('T', ' ')|truncate(19, True, '') }}
+                {% else %}
+                  Não informado
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn btn-primary" id="editarBtn">
+                <i class="fas fa-edit"></i> Editar Perfil
+              </button>
+            </div>
+          </div>
+
+          <!-- Aba: Endereço -->
+          <div class="tab-pane" id="endereco">
+            {% if usuario.leitor %}
+              <div class="info-group">
+                <label>Rua</label>
+                <div class="info-value">
+                  {% if usuario.leitor.endereco %}
+                    {{ usuario.leitor.endereco.rua|default('Não informado') }}
+                  {% else %}
+                    Não informado
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="info-group">
+                <label>CEP</label>
+                <div class="info-value">
+                  {% if usuario.leitor.endereco %}
+                    {{ usuario.leitor.endereco.cep|default('Não informado') }}
+                  {% else %}
+                    Não informado
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="info-group">
+                <label>Número</label>
+                <div class="info-value">
+                  {% if usuario.leitor.endereco %}
+                    {{ usuario.leitor.endereco.numero|default('Não informado') }}
+                  {% else %}
+                    Não informado
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="info-group">
+                <label>Complemento</label>
+                <div class="info-value">
+                  {% if usuario.leitor.endereco %}
+                    {{ usuario.leitor.endereco.complemento|default('Não informado') }}
+                  {% else %}
+                    Não informado
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="info-group">
+                <label>Telefone</label>
+                <div class="info-value">
+                  {{ usuario.leitor.telefone|default('Não informado') }}
+                </div>
+              </div>
+            {% else %}
+              <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Nenhum endereço cadastrado</p>
+              </div>
+            {% endif %}
+
+            <div class="action-buttons">
+              <button class="btn btn-secondary" id="editarEnderecoBtn">
+                <i class="fas fa-edit"></i> Editar Endereço
+              </button>
+            </div>
+          </div>
+
+          <!-- Aba: Segurança -->
+          <div class="tab-pane" id="seguranca">
+            <div class="security-info">
+              <div class="security-item">
+                <div class="security-icon">
+                  <i class="fas fa-key"></i>
+                </div>
+                <div class="security-text">
+                  <h3>Alterar Senha</h3>
+                  <p>Atualize sua senha regularmente para manter sua conta segura</p>
+                </div>
+                <button class="btn btn-secondary" id="alterarSenhaBtn">
+                  <i class="fas fa-edit"></i> Alterar
+                </button>
+              </div>
+
+              <div class="security-item">
+                <div class="security-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="security-text">
+                  <h3>Sessões Ativas</h3>
+                  <p>Você está logado neste dispositivo</p>
+                </div>
+                <button class="btn btn-danger" id="sairBtn">
+                  <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card de Estatísticas (Opcional) -->
+      <div class="stats-card">
+        <h3>Estatísticas</h3>
+        <div class="stat-item">
+          <div class="stat-icon">
+            <i class="fas fa-book"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Livros Emprestados</div>
+            <div class="stat-value">0</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Avaliações</div>
+            <div class="stat-value">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rodapé -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <img src="{{ url_for("static", filename="img/library_icon.png") }}" alt="Ícone da Biblioteca">
+          <span>Biblioteca Online</span>
+        </div>
+        <p>Sistema de gerenciamento inteligente de livros e usuários.</p>
+      </div>
+
+      <div class="footer-section">
+        <h4>Links Rápidos</h4>
+        <ul>
+          <li><a href="/cadastro">Cadastrar</a></li>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/">Início</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Contato</h4>
+        <ul>
+          <li><i class="fas fa-envelope"></i> contato@biblioteca.com</li>
+          <li><i class="fas fa-phone"></i> (71) 9999-9999</li>
+          <li><i class="fas fa-map-marker-alt"></i> Salvador - BA</li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Redes Sociais</h4>
+        <div class="social-links">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 Biblioteca Online - Centro Universitário Jorge Amado (UNIJORGE)</p>
+      <p>Desenvolvido por: Anselmo André, Guilherme Victor, Igor Santos, Miguel Moreira, Ruan Barbosa</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for("static", filename="js/perfil.js") }}"></script>
+</body>
+</html>
