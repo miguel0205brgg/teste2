@@ -172,6 +172,55 @@ class SupabaseService:
                 'message': 'Erro ao buscar usuário'
             }
 
+    def atualizar_usuario(self, usuario_id: int, nome: str = None, email: str = None):
+        """Atualiza os dados do usuário (nome e/ou email)"""
+        print(f"[DEBUG SUPABASE] Tentando atualizar usuário: usuario_id={usuario_id}, nome={nome}, email={email}")
+        try:
+            # Preparar dados a atualizar
+            dados_atualizacao = {}
+            
+            if nome:
+                dados_atualizacao['nome'] = nome
+            
+            if email:
+                dados_atualizacao['email'] = email
+            
+            if not dados_atualizacao:
+                return {
+                    'success': False,
+                    'message': 'Nenhum dado para atualizar'
+                }
+            
+            # Atualizar usuário no banco de dados
+            result = self.supabase.table('usuario').update(dados_atualizacao).eq('id', usuario_id).execute()
+            
+            if result.data:
+                return {
+                    'success': True,
+                    'data': result.data[0] if result.data else None,
+                    'message': 'Usuário atualizado com sucesso'
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': 'Erro ao atualizar usuário'
+                }
+        
+        except Exception as e:
+            error_message = str(e)
+            if "duplicate key value violates unique constraint" in error_message and "email" in error_message:
+                return {
+                    'success': False,
+                    'field': 'email',
+                    'message': 'Este e-mail já está cadastrado. Por favor, use outro e-mail.',
+                    'error': error_message
+                }
+            return {
+                'success': False,
+                'error': error_message,
+                'message': 'Erro ao atualizar usuário'
+            }
+
     def gerar_token_reset_senha(self, email: str):
         """Gera um token de reset de senha e o armazena na tabela reset_senha"""
         try:
