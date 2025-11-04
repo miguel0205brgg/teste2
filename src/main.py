@@ -50,5 +50,20 @@ def dashboard_dev():
     return render_template("dashboard_dev.html")
 
 
+@app.route("/perfil")
+def perfil():
+    """Renderiza a página de perfil do usuário"""
+    # TODO: Implementar lógica para buscar dados do usuário da sessão/banco de dados
+    # Por enquanto, retorna a página com dados de exemplo
+    usuario = {
+        'nome': 'Usuário Exemplo',
+        'email': 'usuario@exemplo.com',
+        'perfil': 'USER',
+        'criado_em': '2025-01-01T10:00:00',
+        'leitor': None
+    }
+    return render_template("perfil.html", usuario=usuario)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=DEBUG)
