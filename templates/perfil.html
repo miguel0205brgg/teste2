@@ -42,7 +42,6 @@
           <div class="header-info">
             <h1>{{ usuario.nome }}</h1>
             <p class="email">{{ usuario.email }}</p>
-            <span class="badge badge-{{ usuario.perfil|lower }}">{{ usuario.perfil }}</span>
           </div>
         </div>
 
@@ -74,19 +73,6 @@
             </div>
             
             <div class="info-group">
-              <label>Tipo de Usuário</label>
-              <div class="info-value">
-                {% if usuario.perfil == 'DEV' %}
-                  <span class="badge badge-dev">Desenvolvedor</span>
-                {% elif usuario.perfil == 'ADMIN' %}
-                  <span class="badge badge-admin">Administrador</span>
-                {% else %}
-                  <span class="badge badge-user">Usuário</span>
-                {% endif %}
-              </div>
-            </div>
-            
-            <div class="info-group">
               <label>Data de Cadastro</label>
               <div class="info-value">
                 {% if usuario.criado_em %}
@@ -106,48 +92,32 @@
 
           <!-- Aba: Endereço -->
           <div class="tab-pane" id="endereco">
-            {% if usuario.leitor %}
+            {% if usuario.leitor and usuario.leitor.endereco %}
               <div class="info-group">
                 <label>Rua</label>
                 <div class="info-value">
-                  {% if usuario.leitor.endereco %}
-                    {{ usuario.leitor.endereco.rua|default('Não informado') }}
-                  {% else %}
-                    Não informado
-                  {% endif %}
+                  {{ usuario.leitor.endereco.rua|default('Não informado') }}
                 </div>
               </div>
               
               <div class="info-group">
                 <label>CEP</label>
                 <div class="info-value">
-                  {% if usuario.leitor.endereco %}
-                    {{ usuario.leitor.endereco.cep|default('Não informado') }}
-                  {% else %}
-                    Não informado
-                  {% endif %}
+                  {{ usuario.leitor.endereco.cep|default('Não informado') }}
                 </div>
               </div>
               
               <div class="info-group">
                 <label>Número</label>
                 <div class="info-value">
-                  {% if usuario.leitor.endereco %}
-                    {{ usuario.leitor.endereco.numero|default('Não informado') }}
-                  {% else %}
-                    Não informado
-                  {% endif %}
+                  {{ usuario.leitor.endereco.numero|default('Não informado') }}
                 </div>
               </div>
               
               <div class="info-group">
                 <label>Complemento</label>
                 <div class="info-value">
-                  {% if usuario.leitor.endereco %}
-                    {{ usuario.leitor.endereco.complemento|default('Não informado') }}
-                  {% else %}
-                    Não informado
-                  {% endif %}
+                  {{ usuario.leitor.endereco.complemento|default('Não informado') }}
                 </div>
               </div>
 
@@ -256,6 +226,92 @@
           </button>
           <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Edição de Endereço -->
+  <div id="modalEditarEndereco" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar Endereço</h2>
+        <button class="modal-close" id="fecharModalEnderecoBtn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="formEditarEndereco" class="modal-form">
+        <div class="form-group">
+          <label for="ruaInput">Rua</label>
+          <input type="text" id="ruaInput" name="rua" value="{% if usuario.leitor and usuario.leitor.endereco %}{{ usuario.leitor.endereco.rua }}{% endif %}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="cepInput">CEP</label>
+          <input type="text" id="cepInput" name="cep" placeholder="12345-678" value="{% if usuario.leitor and usuario.leitor.endereco %}{{ usuario.leitor.endereco.cep }}{% endif %}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="numeroInput">Número</label>
+          <input type="text" id="numeroInput" name="numero" value="{% if usuario.leitor and usuario.leitor.endereco %}{{ usuario.leitor.endereco.numero }}{% endif %}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="complementoInput">Complemento</label>
+          <input type="text" id="complementoInput" name="complemento" value="{% if usuario.leitor and usuario.leitor.endereco %}{{ usuario.leitor.endereco.complemento }}{% endif %}">
+        </div>
+
+        <div class="form-group">
+          <label for="telefoneInput">Telefone</label>
+          <input type="text" id="telefoneInput" name="telefone" value="{% if usuario.leitor %}{{ usuario.leitor.telefone }}{% endif %}" required>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelarEnderecoBtn">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Alteração de Senha -->
+  <div id="modalAlterarSenha" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Alterar Senha</h2>
+        <button class="modal-close" id="fecharModalSenhaBtn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="formAlterarSenha" class="modal-form">
+        <div class="form-group">
+          <label for="senhaAtualInput">Senha Atual</label>
+          <input type="password" id="senhaAtualInput" name="senha_atual" required>
+        </div>
+
+        <div class="form-group">
+          <label for="novaSenhaInput">Nova Senha</label>
+          <input type="password" id="novaSenhaInput" name="nova_senha" required>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmarSenhaInput">Confirmar Nova Senha</label>
+          <input type="password" id="confirmarSenhaInput" name="confirmar_senha" required>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelarSenhaBtn">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Alterar Senha
           </button>
         </div>
       </form>

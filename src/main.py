@@ -122,6 +122,121 @@ def atualizar_perfil():
         }), 500
 
 
+@app.route("/api/perfil/atualizar-endereco", methods=["POST"])
+def atualizar_endereco():
+    """Endpoint para atualizar o endereço do usuário"""
+    try:
+        # Verificar se o usuário está autenticado
+        if 'usuario_id' not in session:
+            return jsonify({
+                'success': False,
+                'message': 'Usuário não autenticado'
+            }), 401
+        
+        # Obter dados do formulário
+        data = request.json
+        rua = data.get('rua')
+        cep = data.get('cep')
+        numero = data.get('numero')
+        complemento = data.get('complemento')
+        telefone = data.get('telefone')
+        
+        # Validar dados obrigatórios
+        if not rua or not cep or not numero or not telefone:
+            return jsonify({
+                'success': False,
+                'message': 'Rua, CEP, Número e Telefone são obrigatórios'
+            }), 400
+        
+        # Atualizar endereço do usuário no banco de dados
+        result = supabase_service.atualizar_endereco(
+            usuario_id=session['usuario_id'],
+            rua=rua,
+            cep=cep,
+            numero=numero,
+            complemento=complemento,
+            telefone=telefone
+        )
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Endereço atualizado com sucesso',
+                'data': result.get('data')
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('message', 'Erro ao atualizar endereço')
+            }), 400
+    
+    except Exception as e:
+        print(f"[ERROR] Erro ao atualizar endereço: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Erro interno do servidor'
+        }), 500
+
+
+@app.route("/api/perfil/alterar-senha", methods=["POST"])
+def alterar_senha():
+    """Endpoint para alterar a senha do usuário"""
+    try:
+        # Verificar se o usuário está autenticado
+        if 'usuario_id' not in session:
+            return jsonify({
+                'success': False,
+                'message': 'Usuário não autenticado'
+            }), 401
+        
+        # Obter dados do formulário
+        data = request.json
+        senha_atual = data.get('senha_atual')
+        nova_senha = data.get('nova_senha')
+        
+        # Validar dados obrigatórios
+        if not senha_atual or not nova_senha:
+            return jsonify({
+                'success': False,
+                'message': 'Senha atual e nova senha são obrigatórias'
+            }), 400
+        
+        # Validar comprimento da nova senha
+        if len(nova_senha) < 6:
+            return jsonify({
+                'success': False,
+                'message': 'A nova senha deve ter no mínimo 6 caracteres'
+            }), 400
+        
+        # Alterar senha do usuário no banco de dados
+        result = supabase_service.alterar_senha(
+            usuario_id=session['usuario_id'],
+            senha_atual=senha_atual,
+            nova_senha=nova_senha
+        )
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Senha alterada com sucesso',
+                'data': result.get('data')
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('message', 'Erro ao alterar senha')
+            }), 400
+    
+    except Exception as e:
+        print(f"[ERROR] Erro ao alterar senha: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Erro interno do servidor'
+        }), 500
+
+
 @app.route("/logout")
 def logout():
     """Realiza logout do usuário"""

@@ -221,6 +221,100 @@ class SupabaseService:
                 'message': 'Erro ao atualizar usuário'
             }
 
+    def atualizar_endereco(self, usuario_id: int, rua: str, cep: str, numero: str, complemento: str = None, telefone: str = None):
+        """Atualiza o endereço do leitor vinculado ao usuário"""
+        print(f"[DEBUG SUPABASE] Tentando atualizar endereço: usuario_id={usuario_id}, rua={rua}, cep={cep}, numero={numero}")
+        try:
+            # Primeiro, buscar o leitor vinculado ao usuário
+            leitor_result = self.supabase.table('leitor').select('*').eq('id_usuario', usuario_id).execute()
+            
+            if not leitor_result.data:
+                # Se não existe leitor, criar um novo
+                return self.criar_leitor(usuario_id, None, telefone)
+            
+            leitor_id = leitor_result.data[0]['id']
+            
+            # Preparar dados de endereço
+            endereco_data = {
+                'rua': rua,
+                'cep': cep,
+                'numero': numero,
+                'complemento': complemento
+            }
+            
+            # Atualizar endereço do leitor
+            update_result = self.supabase.table('leitor').update({
+                'endereco': endereco_data,
+                'telefone': telefone
+            }).eq('id', leitor_id).execute()
+            
+            if update_result.data:
+                return {
+                    'success': True,
+                    'data': update_result.data[0] if update_result.data else None,
+                    'message': 'Endereço atualizado com sucesso'
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': 'Erro ao atualizar endereço'
+                }
+        
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Erro ao atualizar endereço'
+            }
+
+    def alterar_senha(self, usuario_id: int, senha_atual: str, nova_senha: str):
+        """Altera a senha do usuário após validação da senha atual"""
+        print(f"[DEBUG SUPABASE] Tentando alterar senha: usuario_id={usuario_id}")
+        try:
+            # Buscar usuário para validar senha atual
+            result = self.supabase.table('usuario').select('senha').eq('id', usuario_id).execute()
+            
+            if not result.data:
+                return {
+                    'success': False,
+                    'message': 'Usuário não encontrado'
+                }
+            
+            usuario = result.data[0]
+            
+            # Validar senha atual
+            if not self.verify_password(senha_atual, usuario['senha']):
+                return {
+                    'success': False,
+                    'message': 'Senha atual incorreta'
+                }
+            
+            # Hash da nova senha
+            nova_senha_hash = self.hash_password(nova_senha)
+            
+            # Atualizar senha
+            update_result = self.supabase.table('usuario').update({
+                'senha': nova_senha_hash
+            }).eq('id', usuario_id).execute()
+            
+            if update_result.data:
+                return {
+                    'success': True,
+                    'message': 'Senha alterada com sucesso'
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': 'Erro ao alterar senha'
+                }
+        
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Erro ao alterar senha'
+            }
+
     def gerar_token_reset_senha(self, email: str):
         """Gera um token de reset de senha e o armazena na tabela reset_senha"""
         try:
