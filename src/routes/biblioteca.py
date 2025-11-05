@@ -65,7 +65,6 @@ def cadastrar_usuario():
             nome=data["nome"],
             email=data["email"],
             senha=data["senha"],
-            role="usuario",  # Força a role para 'usuario'
             endereco=endereco_completo,
             telefone=data.get("telefone")
         )
