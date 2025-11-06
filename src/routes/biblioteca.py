@@ -56,7 +56,8 @@ def cadastrar_usuario():
             }), 400
 
         # Concatenar endereço para passar para o serviço Supabase
-        endereco_completo = f"CEP: {cep}, Número: {numero}"
+        rua = data.get('rua')
+        endereco_completo = f"Rua: {rua}, CEP: {cep}, Número: {numero}"
         if complemento:
             endereco_completo += f", Complemento: {complemento}"
 
