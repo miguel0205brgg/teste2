@@ -106,8 +106,8 @@ document.addEventListener("DOMContentLoaded", function() {
           alert(`⚠️ ${result.message || "Erro ao cadastrar. Verifique os dados."}`);
         }
       } catch (error) {
-        alert("❌ Erro de conexão com o servidor.");
-        console.error(error);
+        console.error("Erro de conexão:", error);
+        alert("❌ Erro de conexão com o servidor. Verifique sua internet e tente novamente.");
       } finally {
         if (btnText) btnText.style.display = "block";
         if (btnLoader) btnLoader.style.display = "none";

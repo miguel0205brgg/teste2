@@ -53,6 +53,21 @@ def dashboard_dev():
     """Renderiza a página de dashboard de desenvolvedor"""
     return render_template("dashboard_dev.html")
 
+@app.route("/dashboard-usuario")
+def dashboard_usuario():
+    """Renderiza o dashboard para usuários comuns após login"""
+    # Verificar se o usuário está autenticado
+    if 'usuario_id' not in session:
+        return redirect("/login")
+    
+    # Obter dados do usuário da sessão
+    usuario = {
+        'nome': session.get('usuario_nome', 'Usuário'),
+        'id': session.get('usuario_id'),
+        'role': session.get('usuario_role', 'user')
+    }
+    return render_template("dashboard_usuario.html", usuario=usuario)
+
 
 @app.route("/perfil")
 def perfil():
