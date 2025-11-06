@@ -74,8 +74,19 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
       }
 
+      // Validar campos de endereço obrigatórios
+      const cep = document.getElementById("cep").value.trim();
+      const rua = document.getElementById("rua").value.trim();
+      const numero = document.getElementById("numero").value.trim();
+      const telefone = document.getElementById("telefone").value.trim();
+
+      if (!cep || !rua || !numero || !telefone) {
+        alert("Por favor, preencha todos os campos obrigatórios do endereço (CEP, Rua, Número e Telefone).");
+        return;
+      }
+
       // Lógica de carregamento
-      const submitBtn = form.querySelector(".btn-cadastro-submit"); // Alterado para a nova classe
+      const submitBtn = form.querySelector(".btn-cadastro-submit");
       const btnText = submitBtn.querySelector(".btn-text");
       const btnLoader = submitBtn.querySelector(".btn-loader");
       if (btnText) btnText.style.display = "none";
@@ -86,10 +97,11 @@ document.addEventListener("DOMContentLoaded", function() {
       const data = Object.fromEntries(formData.entries());
 
       // Adicionar campos de endereço ao objeto de dados
-      data.cep = document.getElementById("cep").value;
-      data.numero = document.getElementById("numero").value;
-      data.complemento = document.getElementById("complemento").value;
-      data.telefone = document.getElementById("telefone").value;
+      data.cep = cep;
+      data.rua = rua;
+      data.numero = numero;
+      data.complemento = document.getElementById("complemento").value.trim();
+      data.telefone = telefone;
 
       try {
         const response = await fetch("/api/cadastro", {
@@ -116,4 +128,3 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
-

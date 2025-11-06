@@ -12,7 +12,7 @@ def cadastrar_usuario():
         print(f"[DEBUG BIBLIOTECA] Dados recebidos para cadastro: {data}")
         
         # Validar dados obrigatórios
-        required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'numero']
+        required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'rua', 'numero']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({
