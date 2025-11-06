@@ -142,6 +142,7 @@ class SupabaseService:
                 }
                 
         except Exception as e:
+            print(f"[ERROR SUPABASE AUTH] Erro ao autenticar usuário: {str(e)}")
             return {
                 'success': False,
                 'error': str(e),

@@ -18,6 +18,7 @@ app = Flask(
     template_folder=os.path.join(BASE_DIR, 'templates')
 )
 app.config['SECRET_KEY'] = SECRET_KEY
+print(f"[DEBUG MAIN] SECRET_KEY carregada: {SECRET_KEY[:5]}...")
 
 # Inicializar serviço Supabase
 supabase_service = SupabaseService()

@@ -109,7 +109,7 @@ def login_usuario():
         if result['success']:
             # Salvar dados do usuário na sessão
             session['usuario_id'] = result['data']['id']
-            session['usuario_role'] = result['data']['role']
+            session['usuario_perfil'] = result['data']['perfil']
             session['usuario_nome'] = result['data']['nome']
             
             redirect_url = ''
@@ -159,7 +159,7 @@ def obter_perfil():
         
         if result['success']:
             redirect_url = ''
-            if session["usuario_role"] == "dev":
+            if session["usuario_perfil"] == "dev":
                 redirect_url = "/dashboard-dev"
             else:
                 redirect_url = "/dashboard-usuario"
@@ -185,7 +185,7 @@ def status_sistema():
             'message': 'Sistema de Biblioteca Online funcionando',
             'version': '1.0.0',
             'authenticated': 'usuario_id' in session,
-            'user_role': session.get('usuario_role', None)
+            'user_role': session.get('usuario_perfil', None)
         }), 200
         
     except Exception as e:
