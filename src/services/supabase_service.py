@@ -75,7 +75,7 @@ class SupabaseService:
             return {
                 'success': False,
                 'error': str(e),
-                'message': 'Erro ao criar leitor'
+                'message': f'Erro ao criar leitor: {str(e)}'
             }
     
     def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
