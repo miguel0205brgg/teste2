@@ -75,7 +75,7 @@ class SupabaseService:
             return {
                 'success': False,
                 'error': str(e),
-                'message': f'Erro ao criar leitor: {str(e)}'
+                'message': 'Erro ao criar leitor'
             }
     
     def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
@@ -128,6 +128,8 @@ class SupabaseService:
             usuario = result.data[0]
             
             if self.verify_password(senha, usuario["senha"]):
+                # Converter UUID para string para evitar erro de serialização JSON
+                usuario["id"] = str(usuario["id"])
                 del usuario["senha"]
                 return {
                     "success": True,
@@ -142,7 +144,6 @@ class SupabaseService:
                 }
                 
         except Exception as e:
-            print(f"[ERROR SUPABASE AUTH] Erro ao autenticar usuário: {str(e)}")
             return {
                 'success': False,
                 'error': str(e),
@@ -421,5 +422,9 @@ class SupabaseService:
             return {
                 "success": False,
                 "error": str(e),
-                "message": "Erro interno ao resetar a senha."
-            }
+                "message": "Erro interno ao re
+(Content truncated due to size limit. Use page ranges or line ranges to read remaining content)
+
+
+ao vivo
+
