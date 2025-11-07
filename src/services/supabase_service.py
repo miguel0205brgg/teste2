@@ -118,8 +118,8 @@ class SupabaseService:
             usuario_result = self.criar_usuario(nome, email, senha, perfil='usuario')
             if not usuario_result['success']:
                 # Rollback do endereço
-            self._rollback_endereco(id_endereco)
-            return usuario_result
+                self._rollback_endereco(id_endereco)
+                return usuario_result
             
             usuario_id = str(usuario_result['data']['id'])
 
