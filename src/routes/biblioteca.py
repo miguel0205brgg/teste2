@@ -14,14 +14,37 @@ def cadastrar_usuario():
         # Validar dados obrigatórios
         required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'rua', 'numero']
         for field in required_fields:
-            if not data.get(field):
-                return jsonify({
-                    'success': False,
-                    'field': field,
-                    'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
-                }), 400
-        
-        # Validar comprimento dos campos de endereço
+        if not data.get(field):
+            return jsonify({
+                'success': False,
+                'field': field,
+                'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
+            }), 400
+    
+    # Validar força da senha (Correção 2)
+    senha = data.get('senha')
+    if len(senha) < 8:
+        return jsonify({
+            'success': False,
+            'field': 'senha',
+            'message': 'A senha deve ter no mínimo 8 caracteres.'
+        }), 400
+
+    import re
+    tem_maiuscula = bool(re.search(r'[A-Z]', senha))
+    tem_minuscula = bool(re.search(r'[a-z]', senha))
+    tem_numero = bool(re.search(r'[0-9]', senha))
+    tem_especial = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', senha))
+
+    forcas = sum([tem_maiuscula, tem_minuscula, tem_numero, tem_especial])
+    if forcas < 3:
+        return jsonify({
+            'success': False,
+            'field': 'senha',
+            'message': 'A senha deve conter pelo menos 3 dos seguintes: maiúsculas, minúsculas, números, caracteres especiais.'
+        }), 400
+    
+    # Validar comprimento dos campos de endereço
         cep = data.get('cep')
         numero = data.get('numero')
         complemento = data.get('complemento')  # Complemento é opcional
@@ -67,7 +90,7 @@ def cadastrar_usuario():
             email=data['email'],
             senha=data['senha'],
             cep=data['cep'],
-            logradouro=data['rua'],
+            rua=data['rua'],
             numero=data['numero'],
             complemento=data.get('complemento'),
             telefone=data.get('telefone')

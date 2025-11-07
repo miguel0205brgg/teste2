@@ -18,20 +18,75 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  // 2. Validação de Senha em Tempo Real
+  // 2. Validação de Senha em Tempo Real e Força
+  function validarForcaSenha(senha) {
+    const feedback = document.getElementById("senha-feedback");
+    
+    if (senha.length < 8) {
+        feedback.textContent = "A senha deve ter no mínimo 8 caracteres.";
+        feedback.className = "feedback-error";
+        return false;
+    }
+    
+    const temMaiuscula = /[A-Z]/.test(senha);
+    const temMinuscula = /[a-z]/.test(senha);
+    const temNumero = /[0-9]/.test(senha);
+    const temEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+    
+    const forcas = [temMaiuscula, temMinuscula, temNumero, temEspecial].filter(Boolean).length;
+    
+    if (forcas < 3) {
+        feedback.textContent = "A senha deve conter pelo menos 3 dos seguintes: maiúsculas, minúsculas, números, caracteres especiais.";
+        feedback.className = "feedback-error";
+        return false;
+    }
+    
+    if (forcas === 3) {
+        feedback.textContent = "Senha média. Considere adicionar mais caracteres.";
+        feedback.className = "feedback-warning";
+        return true;
+    }
+    
+    feedback.textContent = "Senha forte!";
+    feedback.className = "feedback-success";
+    return true;
+  }
+
   function validarSenhas() {
     if (senhaInput.value && confirmarSenhaInput.value) {
       if (senhaInput.value !== confirmarSenhaInput.value) {
         senhaFeedback.textContent = "As senhas não coincidem.";
         confirmarSenhaInput.setCustomValidity("As senhas não coincidem.");
+        return false;
       } else {
         senhaFeedback.textContent = "";
         confirmarSenhaInput.setCustomValidity("");
+        return true;
       }
     }
+    return false;
   }
-  senhaInput.addEventListener("input", validarSenhas);
+
+  senhaInput.addEventListener("input", function() {
+    validarForcaSenha(this.value);
+    validarSenhas();
+  });
   confirmarSenhaInput.addEventListener("input", validarSenhas);
+
+  // 4. Submissão do Formulário - Ajustar validação de senha
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      if (!validarSenhas() || !validarForcaSenha(senhaInput.value)) {
+        alert("Por favor, corrija os erros de senha antes de continuar.");
+        return;
+      }
+      
+      // ... restante do código de submissão
+    });
+  }
+
 
   // 3. Máscara e Autopreenchimento de CEP
   if (cepInput) {
@@ -46,21 +101,49 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+  // Máscara de telefone (Correção 4)
+  const telefoneInput = document.getElementById("telefone");
+  if (telefoneInput) {
+    telefoneInput.addEventListener("input", (e) => {
+      let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é dígito
+      
+      if (value.length <= 10) {
+          // Formato: (XX) XXXX-XXXX
+          value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+      } else {
+          // Formato: (XX) XXXXX-XXXX
+          value = value.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, "($1) $2-$3");
+      }
+      
+      e.target.value = value;
+    });
+  }
+
   async function buscarCep(cep) {
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
 
       if (!data.erro) {
-        if (ruaInput) ruaInput.value = data.logradouro;
+        if (ruaInput) {
+          ruaInput.value = data.logradouro;
+          ruaInput.style.backgroundColor = "#e8f5e9"; // Indicação visual de preenchimento automático
+        }
         const numeroInput = document.getElementById("numero");
         if (numeroInput) numeroInput.focus(); // Move o foco para o número
       } else {
-        alert("CEP não encontrado.");
-        if (ruaInput) ruaInput.value = "";
+        alert("CEP não encontrado. Por favor, preencha o endereço manualmente.");
+        if (ruaInput) {
+          ruaInput.value = "";
+          ruaInput.focus();
+        }
       }
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
+      alert("Erro ao buscar CEP. Verifique sua conexão e tente novamente, ou preencha o endereço manualmente.");
+      if (ruaInput) {
+        ruaInput.focus();
+      }
     }
   }
 
@@ -69,8 +152,10 @@ document.addEventListener("DOMContentLoaded", function() {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       
-      if (senhaInput.value !== confirmarSenhaInput.value) {
-        alert("As senhas não coincidem! Por favor, verifique.");
+      // A validação de senhas já é feita na função validarSenhas e validarForcaSenha
+      // Apenas garantir que a validação do formulário passou
+      if (!form.checkValidity()) {
+        alert("Por favor, preencha todos os campos obrigatórios corretamente.");
         return;
       }
 
@@ -93,8 +178,12 @@ document.addEventListener("DOMContentLoaded", function() {
       if (btnLoader) btnLoader.style.display = "block";
       submitBtn.disabled = true;
 
+      // Remover o campo confirmar_senha do envio (Correção 5)
       const formData = new FormData(form);
+      formData.delete('confirmar_senha');
       const data = Object.fromEntries(formData.entries());
+
+
 
       // Adicionar campos de endereço ao objeto de dados
       data.cep = cep;

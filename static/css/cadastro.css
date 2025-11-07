@@ -463,3 +463,30 @@ body {
     font-size: 2rem;
   }
 }
+
+/* Feedback de validação de senha (Correção 6) */
+.feedback-error {
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.feedback-warning {
+    color: #f57c00;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.feedback-success {
+    color: #388e3c;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Indicação visual de campo preenchido automaticamente (Correção 6) */
+input[style*="background-color: #e8f5e9"] {
+    border-left: 3px solid #4caf50;
+}

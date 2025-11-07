@@ -103,6 +103,9 @@ class SupabaseService:
 
     def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, cep: str, rua: str, numero: str, complemento: str = None, telefone: str = None):
         """Cadastra um usuário completo (usuario + leitor + endereco)"""
+        id_endereco = None
+        usuario_id = None
+        
         try:
             # 1. Criar Endereço
             endereco_result = self.criar_endereco(cep, rua, numero, complemento)
@@ -115,8 +118,8 @@ class SupabaseService:
             usuario_result = self.criar_usuario(nome, email, senha, perfil='usuario')
             if not usuario_result['success']:
                 # Rollback do endereço
-                self.supabase.table('enderecos').delete().eq('id', id_endereco).execute()
-                return usuario_result
+            self._rollback_endereco(id_endereco)
+            return usuario_result
             
             usuario_id = str(usuario_result['data']['id'])
 
@@ -125,8 +128,7 @@ class SupabaseService:
             
             if not leitor_result['success']:
                 # Rollback do usuário e endereço
-                self.supabase.table('usuario').delete().eq('id', usuario_id).execute()
-                self.supabase.table('enderecos').delete().eq('id', id_endereco).execute()
+                self._rollback_usuario_e_endereco(usuario_id, id_endereco)
                 return {
                     'success': False,
                     'error': leitor_result['error'],
@@ -143,11 +145,35 @@ class SupabaseService:
             }
             
         except Exception as e:
+            # Rollback em caso de erro inesperado
+            if usuario_id and id_endereco:
+                self._rollback_usuario_e_endereco(usuario_id, id_endereco)
+            elif id_endereco:
+                self._rollback_endereco(id_endereco)
+            
             return {
                 'success': False,
                 'error': str(e),
                 'message': 'Erro ao cadastrar usuário completo'
             }
+
+    def _rollback_endereco(self, id_endereco: str):
+        """Rollback do endereço"""
+        try:
+            self.supabase.table('enderecos').delete().eq('id', id_endereco).execute()
+            print(f"[ROLLBACK] Endereço {id_endereco} removido")
+        except Exception as e:
+            print(f"[ROLLBACK ERROR] Falha ao remover endereço {id_endereco}: {str(e)}")
+
+    def _rollback_usuario_e_endereco(self, usuario_id: str, id_endereco: str):
+        """Rollback do usuário e endereço"""
+        try:
+            self.supabase.table('usuario').delete().eq('id', usuario_id).execute()
+            print(f"[ROLLBACK] Usuário {usuario_id} removido")
+        except Exception as e:
+            print(f"[ROLLBACK ERROR] Falha ao remover usuário {usuario_id}: {str(e)}")
+        
+        self._rollback_endereco(id_endereco)
     
     def autenticar_usuario(self, email: str, senha: str):
         """Autentica um usuário pelo email e senha"""
@@ -458,9 +484,6 @@ class SupabaseService:
             return {
                 "success": False,
                 "error": str(e),
-                "message": "Erro interno ao re
-(Content truncated due to size limit. Use page ranges or line ranges to read remaining content)
-
-
-ao vivo
+                "message": "Erro interno ao resetar senha"
+            }
 
