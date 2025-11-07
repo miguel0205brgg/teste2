@@ -55,13 +55,13 @@ class SupabaseService:
                 'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
             }
     
-    def criar_leitor(self, usuario_id: int, endereco: str = None, telefone: str = None, email: str = None):
-        """Cria um registro de leitor vinculado ao usuário"""
-        print(f"[DEBUG SUPABASE] Tentando criar leitor: usuario_id={usuario_id}, endereco={endereco}, telefone={telefone}, email={email}")
+    def criar_leitor(self, usuario_id: str, id_endereco: str = None, telefone: str = None, email: str = None):
+        """Cria um registro de leitor vinculado ao usuário e endereço"""
+        print(f"[DEBUG SUPABASE] Tentando criar leitor: usuario_id={usuario_id}, id_endereco={id_endereco}, telefone={telefone}, email={email}")
         try:
             result = self.supabase.table('leitor').insert({
                 'id_usuario': usuario_id,
-                'endereco': endereco,
+                'id_endereco': id_endereco,
                 'telefone': telefone,
                 'email': email
             }).execute()
@@ -78,23 +78,59 @@ class SupabaseService:
                 'message': 'Erro ao criar leitor'
             }
     
-    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, endereco: str = None, telefone: str = None):
-        """Cadastra um usuário completo (usuario + leitor se for tipo 'usuario')"""
+    def criar_endereco(self, cep: str, rua: str, numero: str, complemento: str = None):
+        """Cria um novo endereço na tabela enderecos"""
+        print(f"[DEBUG SUPABASE] Tentando criar endereço: cep={cep}, rua={rua}, numero={numero}, complemento={complemento}")
         try:
-            usuario_result = self.criar_usuario(nome, email, senha, perfil='usuario')
+            result = self.supabase.table('enderecos').insert({
+                'cep': cep,
+                'logradouro': rua,
+                'numero': numero,
+                'complemento': complemento
+            }).execute()
             
+            return {
+                'success': True,
+                'data': result.data[0] if result.data else None,
+                'message': 'Endereço criado com sucesso'
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Erro ao criar endereço'
+            }
+
+    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, cep: str, rua: str, numero: str, complemento: str = None, telefone: str = None):
+        """Cadastra um usuário completo (usuario + leitor + endereco)"""
+        try:
+            # 1. Criar Endereço
+            endereco_result = self.criar_endereco(cep, rua, numero, complemento)
+            if not endereco_result['success']:
+                return endereco_result
+            
+            id_endereco = str(endereco_result['data']['id'])
+
+            # 2. Criar Usuário
+            usuario_result = self.criar_usuario(nome, email, senha, perfil='usuario')
             if not usuario_result['success']:
+                # Rollback do endereço
+                self.supabase.table('enderecos').delete().eq('id', id_endereco).execute()
                 return usuario_result
             
-            usuario_id = usuario_result['data']['id']
-            leitor_result = self.criar_leitor(usuario_id, endereco, telefone, email)
+            usuario_id = str(usuario_result['data']['id'])
+
+            # 3. Criar Leitor
+            leitor_result = self.criar_leitor(usuario_id, id_endereco, telefone, email)
             
             if not leitor_result['success']:
+                # Rollback do usuário e endereço
                 self.supabase.table('usuario').delete().eq('id', usuario_id).execute()
+                self.supabase.table('enderecos').delete().eq('id', id_endereco).execute()
                 return {
                     'success': False,
                     'error': leitor_result['error'],
-                    'message': 'Erro ao criar perfil de leitor'
+                    'message': 'Erro ao criar perfil de leitor. Rollback realizado.'
                 }
             
             return {
@@ -238,7 +274,7 @@ class SupabaseService:
             
             # Preparar dados de endereço
             endereco_data = {
-                'rua': rua,
+                'logradouro': rua,
                 'cep': cep,
                 'numero': numero,
                 'complemento': complemento

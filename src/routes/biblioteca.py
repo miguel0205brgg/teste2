@@ -63,16 +63,20 @@ def cadastrar_usuario():
 
         # Cadastrar usuário
         result = supabase_service.cadastrar_usuario_completo(
-            nome=data["nome"],
-            email=data["email"],
-            senha=data["senha"],
-            endereco=endereco_completo,
-            telefone=data.get("telefone")
+            nome=data['nome'],
+            email=data['email'],
+            senha=data['senha'],
+            cep=data['cep'],
+            logradouro=data['rua'],
+            numero=data['numero'],
+            complemento=data.get('complemento'),
+            telefone=data.get('telefone')
         )
         
         if result['success']:
             return jsonify(result), 201
         else:
+            print(f"ERRO NO CADASTRO: {result.get('error')}")
             return jsonify(result), 400
             
     except Exception as e:
