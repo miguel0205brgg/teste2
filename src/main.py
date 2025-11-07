@@ -23,6 +23,25 @@ print(f"[DEBUG MAIN] SECRET_KEY carregada: {SECRET_KEY[:5]}...")
 # Inicializar serviço Supabase
 supabase_service = SupabaseService()
 
+# --- TESTE DE CONEXÃO SUPABASE (Para diagnóstico de hospedagem) ---
+try:
+    print("[DIAGNÓSTICO] Testando conexão com Supabase...")
+    # Tenta obter a URL do Supabase (apenas para verificar se a variável de ambiente existe)
+    from src.config import SUPABASE_URL
+    if not SUPABASE_URL:
+        raise ValueError("SUPABASE_URL não está configurada.")
+    
+    # Tenta fazer uma consulta simples (ex: contar usuários)
+    # Isso requer que a tabela 'usuario' exista e que a chave anon tenha permissão de SELECT
+    # Se falhar, o erro será capturado e impresso.
+    count_result = supabase_service.supabase.table('usuario').select('id', count='exact').limit(0).execute()
+    print(f"[DIAGNÓSTICO] Conexão Supabase OK. Usuários contados: {count_result.count}")
+
+except Exception as e:
+    print(f"[DIAGNÓSTICO ERRO CRÍTICO] Falha na conexão/configuração do Supabase: {str(e)}")
+    # Se a conexão falhar, o erro será impresso no log do Render.
+# ------------------------------------------------------------------
+
 # Registrar as rotas da biblioteca
 app.register_blueprint(biblioteca_bp, url_prefix='/api')
 
