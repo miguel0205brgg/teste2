@@ -98,7 +98,10 @@ class SupabaseService:
             return {
                 'success': False,
                 'error': str(e),
-                'message': 'Erro ao criar endereço'rio_completo(self, nome: str, email: str, senha: str, cep: str, rua: str, numero: str, complemento: str = None, telefone: str = None):
+                'message': 'Erro ao criar endereço'
+            }
+
+    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, cep: str, rua: str, numero: str, complemento: str = None, telefone: str = None):
         """Cadastra um usuário completo (usuario + leitor + endereco)"""
         id_endereco = None
         usuario_id = None
