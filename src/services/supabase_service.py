@@ -84,7 +84,7 @@ class SupabaseService:
         try:
             result = self.supabase.table('enderecos').insert({
                 'cep': cep,
-                'logradouro': rua,
+                'rua': rua,
                 'numero': numero,
                 'complemento': complemento
             }).execute()
@@ -98,7 +98,7 @@ class SupabaseService:
             return {
                 'success': False,
                 'error': str(e),
-                'message': f'Erro ao criar endereço: {str(e)}' # Retorna o erro detalhado
+                'message': 'Erro ao criar endereço'
             }
 
     def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, cep: str, rua: str, numero: str, complemento: str = None, telefone: str = None):
@@ -300,7 +300,7 @@ class SupabaseService:
             
             # Preparar dados de endereço
             endereco_data = {
-                'logradouro': rua,
+                'rua': rua,
                 'cep': cep,
                 'numero': numero,
                 'complemento': complemento
