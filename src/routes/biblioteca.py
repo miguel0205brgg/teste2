@@ -14,12 +14,12 @@ def cadastrar_usuario():
         # Validar dados obrigatórios
         required_fields = ['nome', 'email', 'senha', 'telefone', 'cep', 'rua', 'numero']
         for field in required_fields:
-        if not data.get(field):
-            return jsonify({
-                'success': False,
-                'field': field,
-                'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
-            }), 400
+            if not data.get(field):
+                return jsonify({
+                    'success': False,
+                    'field': field,
+                    'message': f'O campo "{field}" é obrigatório e não pode estar vazio.'
+                }), 400
     
     # Validar força da senha (Correção 2)
     senha = data.get('senha')
