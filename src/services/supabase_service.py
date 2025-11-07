@@ -84,7 +84,7 @@ class SupabaseService:
         try:
             result = self.supabase.table('enderecos').insert({
                 'cep': cep,
-                'rua': rua,
+                'logradouro': rua,
                 'numero': numero,
                 'complemento': complemento
             }).execute()
@@ -300,7 +300,7 @@ class SupabaseService:
             
             # Preparar dados de endereço
             endereco_data = {
-                'rua': rua,
+                'logradouro': rua,
                 'cep': cep,
                 'numero': numero,
                 'complemento': complemento
