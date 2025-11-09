@@ -161,7 +161,12 @@ def set_token():
                 
                 # Tenta criar o registro na tabela 'leitor' (opcional, mas recomendado)
                 # Como não temos os dados de endereço/telefone, criamos com valores nulos
-                supabase_service.criar_leitor(usuario_id, id_endereco=None, telefone=None, email=user_email)
+                try:
+                    supabase_service.criar_leitor(usuario_id, id_endereco=None, telefone=None, email=user_email)
+                except Exception as leitor_e:
+                    # Ignora erro de chave duplicada (leitor já existe)
+                    if "duplicate key value violates unique constraint" not in str(leitor_e):
+                        raise leitor_e
                 
             except Exception as e:
                 print(f"[ERRO LOGIN SOCIAL] Falha ao criar usuário/leitor: {e}")
