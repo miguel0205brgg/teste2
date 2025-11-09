@@ -84,16 +84,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Botões de login social (placeholder - adicionar funcionalidade real depois)
-  const googleBtn = document.querySelector('.btn-google');
+  // Botões de login social (funcionalidade real implementada)
+  // const googleBtn = document.querySelector('.btn-google');
   const facebookBtn = document.querySelector('.btn-facebook');
 
-  if (googleBtn) {
-    googleBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      alert('Funcionalidade de login com Google será implementada em breve!');
-    });
-  }
+  // if (googleBtn) {
+  //   googleBtn.addEventListener('click', function(e) {
+  //     e.preventDefault();
+  //     alert('Funcionalidade de login com Google será implementada em breve!');
+  //   });
+  // }
 
   if (facebookBtn) {
     facebookBtn.addEventListener('click', function(e) {
