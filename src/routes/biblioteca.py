@@ -172,67 +172,7 @@ def set_token():
                 }), 500
                 
         else:
-            # Usuário já existe, apenas        # 1. Obter o email do usuário a partir do access_token (JWT)
-            user_email = supabase_service.get_user_email_from_token(access_token)
-        
-        if not user_email:
-            return jsonify({
-                'success': False,
-                'message': 'Falha ao obter o email do usuário a partir do token.'
-            }), 401
-            
-        # 2. Verificar se o usuário existe na tabela 'usuario'
-        usuario_result = supabase_service.obter_usuario_por_email(user_email)
-        
-        if not usuario_result['success']:
-            # Se o usuário não existe, precisamos criá-lo.
-            # O Supabase Auth já criou o usuário na tabela 'auth.users',
-            # mas precisamos criar o registro correspondente na tabela 'usuario'.
-            
-            # **NOTA:** O login social não fornece a senha, então usaremos um hash
-            # vazio ou um valor padrão para a coluna 'senha' na tabela 'usuario'.
-            # A autenticação futura será feita via Supabase Auth (tokens).
-            
-            # O Supabase Auth não fornece o nome do usuário diretamente no token,
-            # mas o nome completo geralmente está no campo 'user_metadata' ou 'full_name'.
-            # Como estamos decodificando o JWT, vamos assumir que o nome não está disponível
-            # e usar o email como nome temporário.
-            
-            # Para fins de demonstração, vamos usar o email como nome e uma senha
-            # hash vazia para satisfazer a restrição NOT NULL da tabela 'usuario'.
-            
-            # Criar um hash de senha vazio para usuários de login social
-            empty_password_hash = supabase_service.hash_password(secrets.token_urlsafe(16))
-            
-            # Tenta criar o usuário na tabela 'usuario'
-            try:
-                insert_result = supabase_service.supabase.table('usuario').insert({
-                    'nome': user_email.split('@')[0], # Nome temporário
-                    'email': user_email,
-                    'senha': empty_password_hash, # Senha hash vazia
-                    'perfil': 'usuario'
-                }).execute()
-                
-                if not insert_result.data:
-                    raise Exception("Falha ao inserir usuário na tabela 'usuario'.")
-                
-                usuario_id = str(insert_result.data[0]['id'])
-                usuario_nome = insert_result.data[0]['nome']
-                usuario_perfil = insert_result.data[0]['perfil']
-                
-                # Tenta criar o registro na tabela 'leitor' (opcional, mas recomendado)
-                # Como não temos os dados de endereço/telefone, criamos com valores nulos
-                supabase_service.criar_leitor(usuario_id, id_endereco=None, telefone=None, email=user_email)
-                
-            except Exception as e:
-                print(f"[ERRO LOGIN SOCIAL] Falha ao criar usuário/leitor: {e}")
-                # Retorna um erro que será capturado pelo callback.html
-                return jsonify({
-                    'success': False,
-                    'message': f'Database error saving new user: {str(e)}'
-                }), 500
-                
-        else:
+
             # Usuário já existe, apenas atualiza a sessão
             usuario_id = str(usuario_result['data']['id'])
             usuario_nome = usuario_result['data']['nome']
