@@ -305,6 +305,54 @@ class SupabaseService:
                 'message': 'Erro ao autenticar usuário'
             }
     
+    def obter_usuario_por_email(self, email: str):
+        """Busca um usuário pelo email"""
+        try:
+            result = self.supabase.table("usuario").select("id, nome, email, perfil, criado_em").eq("email", email).execute()
+            
+            if not result.data:
+                return {
+                    "success": False,
+                    "message": "Usuário não encontrado"
+                }
+            
+            return {
+                "success": True,
+                "data": result.data[0],
+                "message": "Usuário encontrado"
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Erro ao buscar usuário por email'
+            }
+
+    def obter_usuario_por_email(self, email: str):
+        """Busca um usuário pelo email"""
+        try:
+            result = self.supabase.table("usuario").select("id, nome, email, perfil, criado_em").eq("email", email).execute()
+            
+            if not result.data:
+                return {
+                    "success": False,
+                    "message": "Usuário não encontrado"
+                }
+            
+            return {
+                "success": True,
+                "data": result.data[0],
+                "message": "Usuário encontrado"
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Erro ao buscar usuário por email'
+            }
+
     def buscar_usuario_por_id(self, usuario_id: int):
         """Busca um usuário pelo ID"""
         try:
