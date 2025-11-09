@@ -1,8 +1,119 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, render_template, redirect, url_for
 from src.services.supabase_service import SupabaseService
+
+from src.config import SUPABASE_URL # Importar SUPABASE_URL
 
 biblioteca_bp = Blueprint('biblioteca', __name__)
 supabase_service = SupabaseService()
+
+@biblioteca_bp.route('/dashboard_usuario')
+def dashboard_usuario():
+    """Simula a dashboard do usuário após o login."""
+    if 'access_token' not in session:
+        return redirect(url_for('biblioteca.login')) # Redirecionar para a página de login se não estiver autenticado
+    
+    # Aqui você faria a lógica de buscar os dados do usuário no Supabase
+    # usando o token de acesso da sessão.
+    
+    return render_template('dashboard_usuario.html')
+
+@biblioteca_bp.route('/login')
+def login():
+    """Renderiza a página de login."""
+    return render_template('login.html')
+
+@biblioteca_bp.route('/login/google', methods=['GET'])
+def login_google():
+    """Redireciona para o fluxo de autenticação Google do Supabase."""
+    # O Supabase gerencia o fluxo OAuth. O REDIRECT_URI deve ser o configurado no Google Cloud Console.
+    # O Supabase usa o parâmetro 'redirect_to' para o redirecionamento final.
+    # O URI de Redirecionamento configurado no Google Cloud Console é o do Supabase:
+    # https://naawyjavknbewjgzcnxv.supabase.co/auth/v1/callback
+    
+    # O endpoint de autorização do Supabase é:
+    provider = 'google'
+    
+    # url_for('biblioteca.callback', _external=True) irá gerar o URI de redirecionamento final
+    # para a rota /callback que será implementada no Flask.
+    auth_url = f"{SUPABASE_URL}/auth/v1/authorize?provider={provider}&redirect_to={url_for('biblioteca.callback', _external=True)}"
+    
+    return redirect(auth_url)
+
+@biblioteca_bp.route('/callback', methods=['GET'])
+def callback():
+    """
+    Rota de callback para processar a resposta do Supabase Auth.
+    O Supabase retorna a sessão via URL fragment (#access_token=...)
+    ou via query parameters (?code=...).
+    
+    Como o Flask não lida diretamente com URL fragments, o template
+    callback.html deve conter JavaScript para extrair o token e
+    redirecionar o usuário para a dashboard ou página principal.
+    
+    Esta rota apenas renderiza o template.
+    """
+    return render_template('callback.html')
+
+@biblioteca_bp.route('/api/set_token', methods=['POST'])
+def set_token():
+    """
+    Endpoint para receber os tokens de sessão do Supabase via JavaScript
+    e criar a sessão do usuário no Flask.
+    """
+    try:
+        data = request.json
+        access_token = data.get('access_token')
+        refresh_token = data.get('refresh_token')
+        
+        if not access_token or not refresh_token:
+            return jsonify({
+                'success': False,
+                'message': 'Tokens de acesso ou refresh ausentes.'
+            }), 400
+
+        # O SupabaseService deve ter um método para definir a sessão
+        # e obter os dados do usuário.
+        # Por exemplo, usando o access_token para obter o usuário.
+        
+        # O SupabaseService deve ser capaz de inicializar o cliente com o token
+        # e obter a sessão.
+        
+        # Como não temos a implementação do SupabaseService, vamos simular
+        # a criação da sessão e o redirecionamento.
+        
+        # *** AQUI DEVE ENTRAR A LÓGICA REAL DE CRIAÇÃO DE SESSÃO COM O SUPABASE ***
+        # Exemplo:
+        # user_session = supabase_service.set_session(access_token, refresh_token)
+        # if user_session:
+        #     session['user'] = user_session.user.id
+        #     session['access_token'] = access_token
+        #     session['refresh_token'] = refresh_token
+        #     return jsonify({
+        #         'success': True,
+        #         'redirect_url': url_for('biblioteca.dashboard_usuario') # Redirecionar para a dashboard
+        #     })
+        # else:
+        #     return jsonify({
+        #         'success': False,
+        #         'message': 'Falha ao criar a sessão do usuário.'
+        #     }), 401
+        
+        # Simulação:
+        session['access_token'] = access_token
+        session['refresh_token'] = refresh_token
+        
+        # Redirecionar para a dashboard do usuário
+        return jsonify({
+            'success': True,
+            'redirect_url': url_for('biblioteca.dashboard_usuario') # Assumindo que existe uma rota para a dashboard
+        })
+
+    except Exception as e:
+        print(f"Erro ao definir o token de sessão: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno ao processar o token.'
+        }), 500
 
 @biblioteca_bp.route('/cadastro', methods=['POST'])
 def cadastrar_usuario():
