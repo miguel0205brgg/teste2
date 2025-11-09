@@ -112,7 +112,7 @@ def set_token():
                 # *** AQUI ENTRA A LÓGICA REAL DE CRIAÇÃO DE SESSÃO COM O SUPABASE ***
         
         # 1. Obter o email do usuário a partir do access_token (JWT)
-        user_email = supabase_service.get_user_email_from_token(access_token)
+            user_email = supabase_service.get_user_email_from_token(access_token)
         
         if not user_email:
             return jsonify({
@@ -173,7 +173,7 @@ def set_token():
                 
         else:
             # Usuário já existe, apenas        # 1. Obter o email do usuário a partir do access_token (JWT)
-        user_email = supabase_service.get_user_email_from_token(access_token)
+            user_email = supabase_service.get_user_email_from_token(access_token)
         
         if not user_email:
             return jsonify({
