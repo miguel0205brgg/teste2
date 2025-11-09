@@ -259,7 +259,8 @@ def set_token():
         return jsonify({
             'success': True,
             'redirect_url': url_for(redirect_route)
-        })ept Exception as e:
+        })
+    except Exception as e:
         print(f"Erro ao definir o token de sessão: {e}")
         return jsonify({
             'success': False,
