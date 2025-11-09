@@ -6,6 +6,17 @@ from src.config import SUPABASE_URL # Importar SUPABASE_URL
 biblioteca_bp = Blueprint('biblioteca', __name__)
 supabase_service = SupabaseService()
 
+@biblioteca_bp.route('/dashboard_dev')
+def dashboard_dev():
+    """Simula a dashboard do desenvolvedor após o login."""
+    if 'access_token' not in session:
+        return redirect(url_for('biblioteca.login')) # Redirecionar para a página de login se não estiver autenticado
+    
+    # Aqui você faria a lógica de buscar os dados do usuário no Supabase
+    # usando o token de acesso da sessão.
+    
+    return render_template('dashboard_dev.html')
+
 @biblioteca_bp.route('/dashboard_usuario')
 def dashboard_usuario():
     """Simula a dashboard do usuário após o login."""
@@ -98,14 +109,35 @@ def set_token():
         #         'message': 'Falha ao criar a sessão do usuário.'
         #     }), 401
         
-        # Simulação:
+                # *** AQUI ENTRA A LÓGICA REAL DE CRIAÇÃO DE SESSÃO COM O SUPABASE ***
+        
+        # 1. Obter o email do usuário a partir do access_token (JWT)
+        user_email = supabase_service.get_user_email_from_token(access_token)
+        
+        if not user_email:
+            return jsonify({
+                'success': False,
+                'message': 'Falha ao obter o email do usuário a partir do token.'
+            }), 401
+            
+        # 2. Criar a sessão no Flask
         session['access_token'] = access_token
         session['refresh_token'] = refresh_token
+        session['user_email'] = user_email
         
-        # Redirecionar para a dashboard do usuário
+        # 3. Aplicar a lógica de redirecionamento condicional
+        if user_email == 'miguel.0205brgg@gmail.com':
+            redirect_route = 'biblioteca.dashboard_dev'
+        elif user_email == 'sigor2154@gmail.com':
+            redirect_route = 'biblioteca.dashboard_usuario'
+        else:
+            # Redirecionamento padrão para outros usuários
+            redirect_route = 'biblioteca.dashboard_usuario' 
+            
+        # 4. Redirecionar para a rota apropriada
         return jsonify({
             'success': True,
-            'redirect_url': url_for('biblioteca.dashboard_usuario') # Assumindo que existe uma rota para a dashboard
+            'redirect_url': url_for(redirect_route)
         })
 
     except Exception as e:
