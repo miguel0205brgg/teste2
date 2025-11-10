@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.services.supabase_service import supabase_client
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
+auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
