@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, session, render_template, redirect, url_for
 from src.services.supabase_service import SupabaseService
+import os
 
 from src.config import SUPABASE_URL # Importar SUPABASE_URL
 
@@ -46,7 +47,14 @@ def login_google():
     
     # url_for('biblioteca.callback', _external=True) irá gerar o URI de redirecionamento final
     # para a rota /callback que será implementada no Flask.
-    auth_url = f"{SUPABASE_URL}/auth/v1/authorize?provider={provider}&redirect_to={url_for('biblioteca.callback', _external=True)}"
+    # Força o uso de localhost:5000 para o redirect_to em ambiente de desenvolvimento
+    # Isso resolve o problema de o Flask não saber a porta correta em localhost
+    if os.environ.get('FLASK_ENV') == 'development' or os.environ.get('DEBUG') == 'True':
+        redirect_uri = "http://localhost:5000/callback"
+    else:
+        redirect_uri = url_for('biblioteca.callback', _external=True)
+        
+    auth_url = f"{SUPABASE_URL}/auth/v1/authorize?provider={provider}&redirect_to={redirect_uri}"
     
     return redirect(auth_url)
 
@@ -141,7 +149,11 @@ def set_token():
             # hash vazia para satisfazer a restrição NOT NULL da tabela 'usuario'.
             
             # Criar um hash de senha vazio para usuários de login social
-            empty_password_hash = supabase_service.hash_password(secrets.token_urlsafe(16))
+            # O Supabase Auth já lida com a autenticação. A senha na tabela 'usuario'
+            # é apenas para usuários de login tradicional. Para OAuth, usamos um valor
+            # que satisfaça a restrição NOT NULL, mas que não será usado para login.
+            # Usaremos um hash de uma string vazia para padronizar.
+            empty_password_hash = supabase_service.hash_password("")
             
             # Tenta criar o usuário na tabela 'usuario'
             try:
@@ -153,7 +165,9 @@ def set_token():
                 }).execute()
                 
                 if not insert_result.data:
-                    raise Exception("Falha ao inserir usuário na tabela 'usuario'.")
+                    # Se a inserção falhar, o erro será capturado no bloco 'except' externo.
+                    # Não é necessário levantar uma exceção aqui.
+                    pass
                 
                 usuario_id = str(insert_result.data[0]['id'])
                 usuario_nome = insert_result.data[0]['nome']
@@ -162,7 +176,10 @@ def set_token():
                 # Tenta criar o registro na tabela 'leitor' (opcional, mas recomendado)
                 # Como não temos os dados de endereço/telefone, criamos com valores nulos
                 try:
-                    supabase_service.criar_leitor(usuario_id, id_endereco=None, telefone=None, email=user_email)
+                    leitor_result = supabase_service.criar_leitor(usuario_id, usuario_nome, id_endereco=None, telefone=None, email=user_email)
+                    if not leitor_result['success']:
+                        # Se falhar, levanta o erro para ser capturado e retornar o erro de banco de dados
+                        raise Exception(leitor_result['error'])
                 except Exception as leitor_e:
                     # Ignora erro de chave duplicada (leitor já existe)
                     if "duplicate key value violates unique constraint" not in str(leitor_e):

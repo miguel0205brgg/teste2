@@ -148,12 +148,13 @@ class SupabaseService:
                 'message': 'Erro ao criar usuário. Verifique os dados e tente novamente.'
             }
     
-    def criar_leitor(self, usuario_id: str, id_endereco: str = None, telefone: str = None, email: str = None):
+    def criar_leitor(self, usuario_id: str, nome: str, id_endereco: str = None, telefone: str = None, email: str = None):
         """Cria um registro de leitor vinculado ao usuário e endereço"""
-        print(f"[DEBUG SUPABASE] Tentando criar leitor: usuario_id={usuario_id}, id_endereco={id_endereco}, telefone={telefone}, email={email}")
+        print(f"[DEBUG SUPABASE] Tentando criar leitor: usuario_id={usuario_id}, nome={nome}, id_endereco={id_endereco}, telefone={telefone}, email={email}")
         try:
             result = self.supabase.table('leitor').insert({
                 'id_usuario': usuario_id,
+                'nome': nome,
                 'id_endereco': id_endereco,
                 'telefone': telefone,
                 'email': email

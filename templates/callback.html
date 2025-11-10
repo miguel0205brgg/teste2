@@ -34,7 +34,13 @@
                   .then(data => {
                       if (data.success) {
                           // Redireciona para o dashboard ou página principal
-                          window.location.href = data.redirect_url;
+                          // Verifica se o erro é de banco de dados e exibe a mensagem
+                          if (data.message && data.message.includes("Database error saving new user")) {
+                              document.body.innerHTML = "<h1>Erro na autenticação</h1><p>Ocorreu um erro ao salvar seu usuário no banco de dados. Isso pode ser devido a uma configuração incorreta ou a um usuário já existente com dados incompletos.</p><p>Detalhes: " + data.message + "</p>";
+                          } else {
+                              // Redireciona para o dashboard ou página principal
+                              window.location.href = data.redirect_url;
+                          }
                       } else {
                           // Exibe uma mensagem de erro
                           document.body.innerHTML = "<h1>Erro na autenticação</h1><p>" + data.message + "</p>";
