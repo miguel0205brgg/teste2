@@ -1,6 +1,8 @@
 from supabase import create_client, Client
 from src.config import SUPABASE_URL, SUPABASE_KEY
 import hashlib
+import psycopg2 # Adicionado para conexão direta com o PostgreSQL
+import os # Adicionado para variáveis de ambiente do DB
 import json
 import secrets
 from datetime import datetime, timedelta
@@ -8,6 +10,16 @@ from datetime import datetime, timedelta
 class SupabaseService:
     def __init__(self):
         self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+    def _get_db_connection(self):
+        """Obtém uma conexão direta com o banco de dados PostgreSQL."""
+        # Usando variáveis de ambiente para maior flexibilidade
+        return psycopg2.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "biblioteca"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD", "postgres")
+        )
     
     def hash_password(self, password: str) -> str:
         """Hash da senha usando SHA-256 com salt"""
@@ -114,6 +126,56 @@ class SupabaseService:
         except Exception as e:
             print(f"[ERRO SUPABASE] Falha ao decodificar o token JWT: {e}")
             return None
+
+    def sync_social_user(self, email: str, nome: str) -> dict:
+        """
+        Sincroniza o usuário social (Google) com as tabelas 'usuario' e 'leitor'.
+        Retorna o ID do usuário e o email.
+        """
+        conn = None
+        try:
+            conn = self._get_db_connection()
+            cur = conn.cursor()
+
+            # 1. Verifica se o usuário existe na tabela 'usuario'
+            cur.execute("SELECT id FROM usuario WHERE email = %s", (email,))
+            usuario = cur.fetchone()
+
+            if not usuario:
+                # 2. Cria novo usuário na tabela 'usuario'
+                # Senha vazia ou placeholder para usuários sociais
+                cur.execute(
+                    "INSERT INTO usuario (nome, email, senha) VALUES (%s, %s, %s) RETURNING id",
+                    (nome, email, "")
+                )
+                usuario_id = cur.fetchone()[0]
+
+                # 3. Cria registro na tabela 'leitor'
+                cur.execute(
+                    "INSERT INTO leitor (usuario_id) VALUES (%s)",
+                    (usuario_id,)
+                )
+            else:
+                usuario_id = usuario[0]
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            return {
+                "success": True,
+                "usuario_id": usuario_id,
+                "email": email
+            }
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+                conn.close()
+            return {
+                "success": False,
+                "error": f"Erro ao sincronizar perfil de usuário: {str(e)}"
+            }
 
     def criar_usuario(self, nome: str, email: str, senha: str, perfil: str = "usuario"):
         """Cria um novo usuário na tabela usuario"""
