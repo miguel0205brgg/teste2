@@ -34,3 +34,21 @@ def set_token():
 
     except Exception as e:
         return jsonify({"error": f"Erro interno ao processar token: {str(e)}"}), 500
+
+
+
+@biblioteca_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email")
+    senha = data.get("senha")
+
+    if not email or not senha:
+        return jsonify({"success": False, "message": "Email e senha são obrigatórios."}), 400
+
+    auth_result = supabase_client.autenticar_usuario(email, senha)
+
+    if auth_result["success"]:
+        return jsonify({"success": True, "redirect_url": "/dashboard_usuario.html"})
+    else:
+        return jsonify({"success": False, "message": auth_result["message"]}), 401
