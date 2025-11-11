@@ -27,9 +27,9 @@ def set_token():
 
         return jsonify({
             "message": "Login com Google realizado com sucesso!",
-            "redirect_url": "/dashboard_usuario.html",
             "usuario_id": sync_result["usuario_id"],
-            "email": sync_result["email"]
+            "email": sync_result["email"],
+            "redirect_url": "/dashboard-usuario"
         }), 200
 
     except Exception as e:
