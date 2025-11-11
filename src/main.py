@@ -11,9 +11,6 @@ app.register_blueprint(biblioteca_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(frontend_bp)
 
-@app.route("/")
-def index():
-    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
