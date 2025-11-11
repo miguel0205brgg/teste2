@@ -16,7 +16,7 @@ class SupabaseService:
         # Usando variáveis de ambiente para maior flexibilidade
         return psycopg2.connect(
             host=os.getenv("DB_HOST", "localhost"),
-            database=os.getenv("DB_NAME", "biblioteca"),
+            database=os.getenv("DB_NAME", "biblioteca_jailson"),
             user=os.getenv("DB_USER", "postgres"),
             password=os.getenv("DB_PASSWORD", "postgres")
         )
