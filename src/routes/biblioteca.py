@@ -49,6 +49,6 @@ def login():
     auth_result = supabase_client.autenticar_usuario(email, senha)
 
     if auth_result["success"]:
-        return jsonify({"success": True, "redirect_url": "/dashboard_usuario.html"})
+        return jsonify({"success": True, "redirect_url": "/dashboard-usuario"})
     else:
         return jsonify({"success": False, "message": auth_result["message"]}), 401
