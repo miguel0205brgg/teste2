@@ -14,4 +14,4 @@ def serve_html_files(filename):
     if filename.endswith(".html"):
         return render_template(filename)
     # Se não for um arquivo HTML, deixa o Flask retornar 404 ou procurar em 'static'
-    return render_template(filename) # Isso ainda pode causar TemplateNotFound, mas é o que o código original faria.
+    return render_template(filename)
