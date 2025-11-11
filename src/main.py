@@ -4,7 +4,7 @@ from src.routes.biblioteca import biblioteca_bp
 from src.routes.auth import auth_bp
 from src.routes.frontend import frontend_bp
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
 
 app.register_blueprint(biblioteca_bp)
