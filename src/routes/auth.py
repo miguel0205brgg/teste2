@@ -5,7 +5,7 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
-    return jsonify({"message": "Usuário deslogado com sucesso."})
+    return jsonify({"message": "Usuário deslogado com sucesso.", "redirect_url": "/index.html"})
 
 @auth_bp.route("/user", methods=["GET"])
 def get_user():
