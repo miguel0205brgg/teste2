@@ -3,36 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Biblioteca</title>
-  <link rel="stylesheet" href="/static/css/login.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Login</title>
+
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+
+  <script>
+    const SUPABASE_URL = "{{ SUPABASE_URL }}";
+    const SUPABASE_KEY = "{{ SUPABASE_KEY }}";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
 </head>
 <body>
-  <div class="login-container">
+  <div class="container">
     <h2>Login</h2>
+
     <form id="loginForm">
-      <div class="form-group">
-        <label for="email">E-mail</label>
-        <input type="email" id="email" placeholder="Digite seu e-mail" required>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Senha</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" placeholder="Digite sua senha" required>
-          <span id="togglePassword"><i class="fa fa-eye"></i></span>
-        </div>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Entrar</button>
+      <input type="email" id="email" placeholder="E-mail" required><br>
+      <input type="password" id="senha" placeholder="Senha" required><br>
+      <button type="submit">Entrar</button>
     </form>
 
-    <div class="social-login">
-      <p>ou</p>
-      <a href="#" id="googleLogin" class="btn-social btn-google">
-        <i class="fa-brands fa-google"></i> Entrar com Google
-      </a>
-    </div>
+    <hr>
+    <button id="googleLogin">Entrar com Google</button>
   </div>
 
   <script src="/static/js/login.js"></script>
