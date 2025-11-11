@@ -1,51 +1,41 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const togglePassword = document.getElementById('togglePassword');
-  const passwordInput = document.getElementById('password');
-  const loginForm = document.getElementById('loginForm');
-  const googleBtn = document.getElementById('googleLogin');
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("loginForm");
+  const googleBtn = document.getElementById("googleLogin");
 
-  // Mostrar/ocultar senha
-  if (togglePassword && passwordInput) {
-    togglePassword.addEventListener('click', function() {
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
-      const icon = this.querySelector('i');
-      icon.classList.toggle('fa-eye');
-      icon.classList.toggle('fa-eye-slash');
-    });
-  }
-
-  // Login normal
-  if (loginForm) {
-    loginForm.addEventListener('submit', function(e) {
+  // Login normal via backend Flask
+  if (form) {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const senha = document.getElementById('password').value.trim();
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
 
-      if (!email || !senha) {
-        alert('Preencha todos os campos.');
-        return;
+      const resp = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha }),
+      });
+
+      const data = await resp.json();
+      if (data.success) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert(data.message || "Erro ao fazer login.");
       }
-
-      fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) window.location.href = data.redirect_url;
-        else alert(data.message || 'Erro ao fazer login.');
-      })
-      .catch(() => alert('Erro de conexão.'));
     });
   }
 
-  // Login com Google
+  // Login com Google (via Supabase OAuth)
   if (googleBtn) {
-    googleBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = '/api/login/google';
+    googleBtn.addEventListener("click", async () => {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + "/api/set_token" },
+      });
+
+      if (error) {
+        console.error("Erro no login Google:", error.message);
+        alert("Erro ao entrar com o Google.");
+      }
     });
   }
 });
