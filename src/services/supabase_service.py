@@ -9,7 +9,11 @@ from datetime import datetime, timedelta
 
 class SupabaseService:
     def __init__(self):
-        self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        try:
+            self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        except Exception as e:
+            print(f"[AVISO] Falha ao inicializar o cliente Supabase SDK: {e}. Usando MCP para operações.")
+            self.supabase: Client = None # Define como None para evitar falha na inicialização
 
     def _get_db_connection(self):
         """Obtém uma conexão direta com o banco de dados PostgreSQL."""
@@ -691,3 +695,6 @@ class SupabaseService:
                 "message": "Erro interno ao resetar senha"
             }
 
+
+# Cria uma instância da classe para ser importada em outros módulos
+supabase_client = SupabaseService()
