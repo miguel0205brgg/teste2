@@ -1,4 +1,6 @@
-# ... código inicial permanece igual ...
+class SupabaseClient:
+    def __init__(self, supabase):
+        self.supabase = supabase
 
     def criar_leitor(self, usuario_id: str, id_endereco: str = None, telefone: str = None, email: str = None, nome: str = None):
         """Cria um registro de leitor vinculado ao usuário e endereço"""
@@ -80,30 +82,28 @@
                 'message': 'Erro ao cadastrar usuário completo'
             }
 
-# Remover duplicidade de obter_usuario_por_email
-# A função final válida:
-def obter_usuario_por_email(self, email: str):
-    """Busca um usuário pelo email"""
-    try:
-        result = self.supabase.table("usuario").select("id, nome, email, perfil, criado_em").eq("email", email).execute()
-        
-        if not result.data:
+    def obter_usuario_por_email(self, email: str):
+        """Busca um usuário pelo email"""
+        try:
+            result = self.supabase.table("usuario").select("id, nome, email, perfil, criado_em").eq("email", email).execute()
+            
+            if not result.data:
+                return {
+                    "success": False,
+                    "message": "Usuário não encontrado"
+                }
+            
             return {
-                "success": False,
-                "message": "Usuário não encontrado"
+                "success": True,
+                "data": result.data[0],
+                "message": "Usuário encontrado"
             }
-        
-        return {
-            "success": True,
-            "data": result.data[0],
-            "message": "Usuário encontrado"
-        }
-        
-    except Exception as e:
-        return {
-            'success': False,
-            'error': str(e),
-            'message': 'Erro ao buscar usuário por email'
-        }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Erro ao buscar usuário por email'
+            }
 
-# ... restante do código permanece igual ...
+# Fim da classe
