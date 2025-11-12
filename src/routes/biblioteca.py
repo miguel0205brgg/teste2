@@ -24,7 +24,7 @@ def set_token():
             "message": "Login com Google realizado com sucesso!",
             "usuario_id": sync_result["usuario_id"],
             "email": sync_result["email"],
-            "redirect_url": "/dashboard-usuario"
+            "redirect_url": "/dashboard_usuario"
         }), 200
     except Exception as e:
         return jsonify({"error": f"Erro interno ao processar token: {str(e)}"}), 500
