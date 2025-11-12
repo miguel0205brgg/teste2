@@ -32,7 +32,11 @@ class SupabaseClient:
                 "message": "Usuário criado com sucesso"
             }
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao criar usuário"}
+            erro_msg = str(e)
+            print("[ERRO SUPABASE] criar_usuario:", erro_msg)
+            if "duplicate key" in erro_msg.lower() and "email" in erro_msg.lower():
+                return {"success": False, "error": erro_msg, "message": "Já existe um usuário com esse email."}
+            return {"success": False, "error": erro_msg, "message": "Erro ao criar usuário"}
 
     def autenticar_usuario(self, email: str, senha: str):
         try:
@@ -41,6 +45,7 @@ class SupabaseClient:
                 return {"success": False, "message": "Email ou senha incorretos"}
             return {"success": True, "data": result.data[0]}
         except Exception as e:
+            print("[ERRO SUPABASE] autenticar_usuario:", str(e))
             return {"success": False, "message": str(e)}
 
     def obter_usuario_por_email(self, email: str):
@@ -50,6 +55,7 @@ class SupabaseClient:
                 return {"success": False, "message": "Usuário não encontrado"}
             return {"success": True, "data": result.data[0]}
         except Exception as e:
+            print("[ERRO SUPABASE] obter_usuario_por_email:", str(e))
             return {"success": False, "error": str(e), "message": "Erro ao buscar usuário"}
 
     # ---------- Endereço ----------
@@ -63,6 +69,7 @@ class SupabaseClient:
             }).execute()
             return {"success": True, "data": result.data[0] if result.data else None}
         except Exception as e:
+            print("[ERRO SUPABASE] criar_endereco:", str(e))
             return {"success": False, "error": str(e), "message": "Erro ao criar endereço"}
 
     # ---------- Leitor ----------
@@ -77,7 +84,9 @@ class SupabaseClient:
             }).execute()
             return {"success": True, "data": result.data[0] if result.data else None}
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao criar leitor"}
+            erro_msg = str(e)
+            print("[ERRO SUPABASE] criar_leitor:", erro_msg)
+            return {"success": False, "error": erro_msg, "message": "Erro ao criar leitor"}
 
     # ---------- Cadastro Completo ----------
     def cadastrar_usuario_completo(self, nome, email, senha, cep, rua, numero, complemento=None, telefone=None):
@@ -111,6 +120,7 @@ class SupabaseClient:
                 self._rollback_usuario_e_endereco(usuario_id, id_endereco)
             elif id_endereco:
                 self._rollback_endereco(id_endereco)
+            print("[ERRO SUPABASE] cadastrar_usuario_completo:", str(e))
             return {"success": False, "error": str(e), "message": "Erro ao cadastrar usuário completo"}
 
     # ---------- Rollbacks ----------
