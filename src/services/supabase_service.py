@@ -1,148 +1,107 @@
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
-from dotenv import load_dotenv
-from supabase import create_client, Client
 
-# Carrega variáveis do .env
-load_dotenv()
+# Configurações do banco
+DB_HOST = os.environ.get("DB_HOST")
+DB_NAME = os.environ.get("DB_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_PORT = os.environ.get("DB_PORT", 5432)
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=DB_PORT,
+        cursor_factory=RealDictCursor
+    )
+    return conn
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("SUPABASE_URL ou SUPABASE_KEY não foram encontrados no .env")
+# -------- Usuário / Leitor --------
+def criar_usuario_completo(nome, email, senha, telefone=None, cep=None, logradouro=None, numero=None, complemento=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Inserir usuario
+        cur.execute("""
+            INSERT INTO usuario (nome, email, senha) 
+            VALUES (%s, %s, %s)
+            RETURNING id
+        """, (nome, email, senha))
+        usuario_id = cur.fetchone()["id"]
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-class SupabaseClient:
-    def __init__(self):
-        self.supabase = supabase
-
-    # ---------- Usuário ----------
-    def criar_usuario(self, nome: str, email: str, senha: str, perfil: str = "usuario"):
-        if not nome or not email or not senha:
-            return {"success": False, "message": "Nome, email e senha são obrigatórios"}
-        try:
-            result = self.supabase.table("usuario").insert({
-                "nome": nome,
-                "email": email,
-                "senha": senha,
-                "perfil": perfil
-            }).execute()
-            return {"success": True, "data": result.data[0] if result.data else None, "message": "Usuário criado com sucesso"}
-        except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao criar usuário"}
-
-    def autenticar_usuario(self, email: str, senha: str):
-        try:
-            result = self.supabase.table("usuario").select("*").eq("email", email).eq("senha", senha).execute()
-            if not result.data:
-                return {"success": False, "message": "Email ou senha incorretos"}
-            return {"success": True, "data": result.data[0]}
-        except Exception as e:
-            return {"success": False, "message": str(e)}
-
-    def obter_usuario_por_email(self, email: str):
-        try:
-            result = self.supabase.table("usuario").select("*").eq("email", email).execute()
-            if not result.data:
-                return {"success": False, "message": "Usuário não encontrado"}
-            return {"success": True, "data": result.data[0]}
-        except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao buscar usuário"}
-
-    # ---------- Endereço ----------
-    def criar_endereco(self, cep: str, rua: str, numero: str, complemento: str):
-        if not cep or not rua or not numero or not complemento:
-            return {"success": False, "message": "CEP, rua, número e complemento são obrigatórios"}
-        try:
-            result = self.supabase.table("enderecos").insert({
-                "cep": cep,
-                "rua": rua,
-                "numero": numero,
-                "complemento": complemento
-            }).execute()
-            return {"success": True, "data": result.data[0] if result.data else None}
-        except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao criar endereço"}
-
-    # ---------- Leitor ----------
-    def criar_leitor(self, usuario_id: str, id_endereco: str, telefone: str, email: str, nome: str):
-        if not usuario_id or not id_endereco or not telefone or not email or not nome:
-            return {"success": False, "message": "Todos os campos do leitor são obrigatórios"}
-        try:
-            result = self.supabase.table("leitor").insert({
-                "id_usuario": usuario_id,
-                "nome": nome,
-                "id_endereco": id_endereco,
-                "telefone": telefone,
-                "email": email
-            }).execute()
-            return {"success": True, "data": result.data[0] if result.data else None}
-        except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao criar leitor"}
-
-    # ---------- Cadastro Completo ----------
-    def cadastrar_usuario_completo(self, nome, email, senha, cep, rua, numero, complemento, telefone):
-        id_endereco = None
-        usuario_id = None
-        try:
-            # Criar endereço
-            endereco_res = self.criar_endereco(cep, rua, numero, complemento)
-            if not endereco_res["success"]:
-                return endereco_res
-            id_endereco = str(endereco_res["data"]["id"])
-
-            # Criar usuário
-            usuario_res = self.criar_usuario(nome, email, senha)
-            if not usuario_res["success"]:
-                self._rollback_endereco(id_endereco)
-                return usuario_res
-            usuario_id = str(usuario_res["data"]["id"])
-
-            # Criar leitor
-            leitor_res = self.criar_leitor(usuario_id=usuario_id, id_endereco=id_endereco, telefone=telefone, email=email, nome=nome)
-            if not leitor_res["success"]:
-                self._rollback_usuario_e_endereco(usuario_id, id_endereco)
-                return {"success": False, "error": leitor_res.get("error"), "message": "Erro ao criar leitor. Rollback realizado."}
-
-            return {"success": True, "data": {"usuario": usuario_res["data"], "leitor": leitor_res["data"]}}
-
-        except Exception as e:
-            if usuario_id and id_endereco:
-                self._rollback_usuario_e_endereco(usuario_id, id_endereco)
-            elif id_endereco:
-                self._rollback_endereco(id_endereco)
-            return {"success": False, "error": str(e), "message": "Erro ao cadastrar usuário completo"}
-
-    # ---------- Rollbacks ----------
-    def _rollback_endereco(self, id_endereco):
-        try:
-            self.supabase.table("enderecos").delete().eq("id", id_endereco).execute()
-        except:
-            pass
-
-    def _rollback_usuario_e_endereco(self, usuario_id, id_endereco):
-        try:
-            self.supabase.table("leitor").delete().eq("id_usuario", usuario_id).execute()
-            self.supabase.table("usuario").delete().eq("id", usuario_id).execute()
-            self.supabase.table("enderecos").delete().eq("id", id_endereco).execute()
-        except:
-            pass
-
-    # ---------- Social/Login Google ----------
-    def get_user_email_from_token(self, token):
-        # Apenas exemplo; ajuste conforme integração real do Google
-        return {"email": "usuario@gmail.com", "name": "Usuário Google"}
-
-    def sync_social_user(self, email, nome):
-        usuario = self.obter_usuario_por_email(email)
-        if usuario["success"]:
-            return {"success": True, "usuario_id": usuario["data"]["id"], "email": usuario["data"]["email"]}
+        # Inserir endereco
+        if cep or logradouro or numero or complemento:
+            cur.execute("""
+                INSERT INTO enderecos (cep, logradouro, numero, complemento)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+            """, (cep, logradouro, numero, complemento))
+            endereco_id = cur.fetchone()["id"]
         else:
-            res = self.cadastrar_usuario_completo(nome, email, "senha_provisoria123", "00000-000", "Rua Exemplo", "123", "Complemento Exemplo", "000000000")
-            if res["success"]:
-                return {"success": True, "usuario_id": res["data"]["usuario"]["id"], "email": email}
-            return {"success": False, "error": res.get("error", "Erro desconhecido")}
+            endereco_id = None
 
-# Instância global
-supabase_client = SupabaseClient()
+        # Inserir leitor
+        cur.execute("""
+            INSERT INTO leitor (nome, email, telefone, id_usuario, id_endereco)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+        """, (nome, email, telefone, usuario_id, endereco_id))
+        leitor_id = cur.fetchone()["id"]
+
+        conn.commit()
+        return {"usuario_id": usuario_id, "leitor_id": leitor_id}
+
+    except Exception as e:
+        conn.rollback()
+        print("Erro ao criar usuário:", e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+def autenticar_usuario(email, senha):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT u.id AS usuario_id, u.nome, u.email, u.senha, l.id AS leitor_id,
+                   l.telefone, l.id_endereco, e.cep, e.logradouro, e.numero, e.complemento
+            FROM usuario u
+            LEFT JOIN leitor l ON l.id_usuario = u.id
+            LEFT JOIN enderecos e ON l.id_endereco = e.id
+            WHERE u.email = %s
+        """, (email,))
+        usuario = cur.fetchone()
+        if usuario and usuario["senha"] == senha:
+            # Remove senha antes de retornar
+            usuario.pop("senha")
+            return usuario
+        return None
+    except Exception as e:
+        print("Erro ao autenticar usuário:", e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+def buscar_leitor_por_id(leitor_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT l.id, l.nome, l.email, l.telefone, e.cep, e.logradouro, e.numero, e.complemento
+            FROM leitor l
+            LEFT JOIN enderecos e ON l.id_endereco = e.id
+            WHERE l.id = %s
+        """, (leitor_id,))
+        return cur.fetchone()
+    except Exception as e:
+        print("Erro ao buscar leitor:", e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
