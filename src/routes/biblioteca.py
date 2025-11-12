@@ -1,46 +1,32 @@
-from flask import Blueprint, request, jsonify, session
-from src.services.supabase_service import supabase_client
+from flask import Flask, request, jsonify, redirect, url_for
+from supabase_service import criar_usuario_completo, autenticar_usuario
 
-biblioteca_bp = Blueprint("biblioteca", __name__, url_prefix="/api")
+app = Flask(__name__)
 
-@biblioteca_bp.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    email = data.get("email")
-    senha = data.get("senha")
-
-    if not email or not senha:
-        return jsonify({"success": False, "message": "Email e senha são obrigatórios."}), 400
-
-    auth_result = supabase_client.autenticar_usuario(email, senha)
-    if auth_result["success"]:
-        session["usuario_email"] = email  # salva o email na sessão
-        return jsonify({"success": True, "redirect_url": "/dashboard_usuario"})
-    else:
-        return jsonify({"success": False, "message": auth_result["message"]}), 401
-
-@biblioteca_bp.route("/cadastro", methods=["POST"])
+@app.route("/api/cadastro", methods=["POST"])
 def cadastro():
-    data = request.get_json()
+    data = request.json
     nome = data.get("nome")
     email = data.get("email")
     senha = data.get("senha")
+    telefone = data.get("telefone")
     cep = data.get("cep")
-    rua = data.get("rua")
+    logradouro = data.get("rua")
     numero = data.get("numero")
     complemento = data.get("complemento")
-    telefone = data.get("telefone")
 
-    if not all([nome, email, senha, cep, rua, numero, telefone]):
-        return jsonify({"success": False, "message": "Todos os campos obrigatórios devem ser preenchidos."}), 400
+    usuario = criar_usuario_completo(nome, email, senha, telefone, cep, logradouro, numero, complemento)
+    if usuario:
+        return jsonify({"success": True, "redirect_url": "/login"})
+    return jsonify({"success": False, "message": "Erro ao criar perfil de leitor. Rollback realizado."}), 400
 
-    try:
-        res = supabase_client.cadastrar_usuario_completo(
-            nome, email, senha, cep, rua, numero, complemento, telefone
-        )
-        if res["success"]:
-            return jsonify({"success": True, "redirect_url": "/login"})
-        else:
-            return jsonify({"success": False, "message": res.get("error", "Erro ao cadastrar usuário")}), 400
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Erro interno: {str(e)}"}), 500
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.json
+    email = data.get("email")
+    senha = data.get("senha")
+
+    usuario = autenticar_usuario(email, senha)
+    if usuario:
+        return jsonify({"success": True, "redirect_url": "/dashboard_usuario", "usuario": usuario})
+    return jsonify({"success": False, "message": "E-mail ou senha incorretos
