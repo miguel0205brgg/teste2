@@ -14,7 +14,7 @@ def login():
 
     auth_result = supabase_client.autenticar_usuario(email, senha)
     if auth_result["success"]:
-        session["usuario_id"] = email  # salva email na sessão
+        session["usuario_email"] = email  # salva o email na sessão
         return jsonify({"success": True, "redirect_url": "/dashboard_usuario"})
     else:
         return jsonify({"success": False, "message": auth_result["message"]}), 401
@@ -35,7 +35,9 @@ def cadastro():
         return jsonify({"success": False, "message": "Todos os campos obrigatórios devem ser preenchidos."}), 400
 
     try:
-        res = supabase_client.cadastrar_usuario_completo(nome, email, senha, cep, rua, numero, complemento, telefone)
+        res = supabase_client.cadastrar_usuario_completo(
+            nome, email, senha, cep, rua, numero, complemento, telefone
+        )
         if res["success"]:
             return jsonify({"success": True, "redirect_url": "/login"})
         else:
