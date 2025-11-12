@@ -24,9 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      const senha = document.getElementById('password').value;
 
-      if (!email || !password) {
+      if (!email || !senha) {
         alert('Por favor, preencha todos os campos.');
         return;
       }
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
       fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email, senha: password }),
+        body: JSON.stringify({ email, senha }),
       })
       .then(response => response.json())
       .then(data => {
@@ -75,11 +75,10 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
 
       try {
-        // Aqui você chamaria o endpoint OAuth do Supabase
         const response = await fetch("/api/set_token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: "TOKEN_DE_EXEMPLO" }) // Substitua pelo token real vindo do OAuth
+          body: JSON.stringify({ access_token: "TOKEN_DE_EXEMPLO" }) // substituir pelo token real
         });
         const data = await response.json();
 
