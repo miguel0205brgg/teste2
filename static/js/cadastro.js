@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const temMaiuscula = /[A-Z]/.test(senha);
     const temMinuscula = /[a-z]/.test(senha);
     const temNumero = /[0-9]/.test(senha);
-    const temEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+    const temEspecial = /[!@#$%^&*(),.?\":{}|<>]/.test(senha);
     const forcas = [temMaiuscula, temMinuscula, temNumero, temEspecial].filter(Boolean).length;
 
     if (forcas < 3) {
@@ -105,8 +105,16 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const formData = new FormData(form);
-    formData.delete("confirmar_senha"); // não enviar confirmar senha
-    const data = Object.fromEntries(formData.entries());
+    const data = {
+      nome: formData.get("nome"),
+      email: formData.get("email"),
+      senha: formData.get("senha"),
+      cep: formData.get("cep"),
+      rua: formData.get("rua"),
+      numero: formData.get("numero"),
+      complemento: formData.get("complemento") || "",
+      telefone: formData.get("telefone")
+    };
 
     try {
       const res = await fetch("/api/cadastro", {
