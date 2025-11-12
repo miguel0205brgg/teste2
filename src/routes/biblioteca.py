@@ -38,7 +38,7 @@ def login():
         return jsonify({"success": False, "message": "Email e senha são obrigatórios."}), 400
     auth_result = supabase_client.autenticar_usuario(email, senha)
     if auth_result["success"]:
-        return jsonify({"success": True, "redirect_url": "/dashboard-usuario"})
+        return jsonify({"success": True, "redirect_url": "/dashboard_usuario"})
     else:
         return jsonify({"success": False, "message": auth_result["message"]}), 401
 
