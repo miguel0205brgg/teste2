@@ -29,4 +29,7 @@ def login():
     usuario = autenticar_usuario(email, senha)
     if usuario:
         return jsonify({"success": True, "redirect_url": "/dashboard_usuario", "usuario": usuario})
-    return jsonify({"success": False, "message": "E-mail ou senha incorretos
+    return jsonify({"success": False, "message": "E-mail ou senha incorretos."}), 401
+
+if __name__ == "__main__":
+    app.run(debug=True)
