@@ -27,3 +27,18 @@ def cadastro():
     senha = data.get("senha")
     cep = data.get("cep")
     rua = data.get("rua")
+    numero = data.get("numero")
+    complemento = data.get("complemento")
+    telefone = data.get("telefone")
+
+    if not all([nome, email, senha, cep, rua, numero, telefone]):
+        return jsonify({"success": False, "message": "Todos os campos obrigatórios devem ser preenchidos."}), 400
+
+    try:
+        res = supabase_client.cadastrar_usuario_completo(nome, email, senha, cep, rua, numero, complemento, telefone)
+        if res["success"]:
+            return jsonify({"success": True, "redirect_url": "/login"})
+        else:
+            return jsonify({"success": False, "message": res.get("error", "Erro ao cadastrar usuário")}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Erro interno: {str(e)}"}), 500
