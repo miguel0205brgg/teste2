@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from supabase import create_client
+from supabase import create_client, Client
 
 # Carrega .env
 load_dotenv()
@@ -11,7 +11,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL ou SUPABASE_KEY não foram encontrados no .env")
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 class SupabaseClient:
     def __init__(self):
@@ -26,7 +26,6 @@ class SupabaseClient:
                 "senha": senha,
                 "perfil": perfil
             }).execute()
-            
             return {
                 "success": True,
                 "data": result.data[0] if result.data else None,
@@ -80,35 +79,41 @@ class SupabaseClient:
         except Exception as e:
             return {"success": False, "error": str(e), "message": "Erro ao criar leitor"}
 
-    # ---------- Usuário Completo ----------
+    # ---------- Cadastro Completo ----------
     def cadastrar_usuario_completo(self, nome, email, senha, cep, rua, numero, complemento=None, telefone=None):
+        """Cadastra usuário + endereço + leitor com rollback automático"""
+        id_endereco = None
+        usuario_id = None
         try:
-            # 1) Criar endereço
+            # Criar endereço
             endereco_res = self.criar_endereco(cep, rua, numero, complemento)
             if not endereco_res["success"]:
                 return endereco_res
             id_endereco = str(endereco_res["data"]["id"])
 
-            # 2) Criar usuário
+            # Criar usuário
             usuario_res = self.criar_usuario(nome, email, senha)
             if not usuario_res["success"]:
-                # Rollback do endereço
                 self._rollback_endereco(id_endereco)
                 return usuario_res
             usuario_id = str(usuario_res["data"]["id"])
 
-            # 3) Criar leitor
+            # Criar leitor
             leitor_res = self.criar_leitor(usuario_id=usuario_id, id_endereco=id_endereco, telefone=telefone, email=email, nome=nome)
             if not leitor_res["success"]:
                 self._rollback_usuario_e_endereco(usuario_id, id_endereco)
-                return {"success": False, "error": leitor_res["error"], "message": "Erro ao criar leitor. Rollback realizado."}
+                return {"success": False, "error": leitor_res.get("error"), "message": "Erro ao criar leitor. Rollback realizado."}
 
             return {"success": True, "data": {"usuario": usuario_res["data"], "leitor": leitor_res["data"]}}
 
         except Exception as e:
+            if usuario_id and id_endereco:
+                self._rollback_usuario_e_endereco(usuario_id, id_endereco)
+            elif id_endereco:
+                self._rollback_endereco(id_endereco)
             return {"success": False, "error": str(e), "message": "Erro ao cadastrar usuário completo"}
 
-    # ---------- Rollback ----------
+    # ---------- Rollbacks ----------
     def _rollback_endereco(self, id_endereco):
         try:
             self.supabase.table("enderecos").delete().eq("id", id_endereco).execute()
@@ -139,6 +144,5 @@ class SupabaseClient:
                 return {"success": True, "usuario_id": res["data"]["usuario"]["id"], "email": email}
             return {"success": False, "error": res.get("error", "Erro desconhecido")}
 
-
-# Instância global para importar em biblioteca.py ou auth.py
+# Instância global para importar em routes
 supabase_client = SupabaseClient()
