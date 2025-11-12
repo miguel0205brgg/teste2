@@ -1,18 +1,24 @@
-from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+from supabase import create_client
 
-# Configuração do Supabase
-SUPABASE_URL = "SUA_URL_SUPABASE"
-SUPABASE_KEY = "SUA_KEY_SUPABASE"
+# Carrega .env
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL ou SUPABASE_KEY não foram encontrados no .env")
+
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
 class SupabaseClient:
-    def __init__(self, supabase: Client):
+    def __init__(self):
         self.supabase = supabase
 
-    # Usuário
+    # ---------- Usuário ----------
     def criar_usuario(self, nome: str, email: str, senha: str, perfil: str = "usuario"):
-        """Cria um usuário"""
         try:
             result = self.supabase.table("usuario").insert({
                 "nome": nome,
@@ -20,7 +26,7 @@ class SupabaseClient:
                 "senha": senha,
                 "perfil": perfil
             }).execute()
-
+            
             return {
                 "success": True,
                 "data": result.data[0] if result.data else None,
@@ -30,28 +36,25 @@ class SupabaseClient:
             return {"success": False, "error": str(e), "message": "Erro ao criar usuário"}
 
     def autenticar_usuario(self, email: str, senha: str):
-        """Autentica usuário pelo email e senha"""
         try:
             result = self.supabase.table("usuario").select("*").eq("email", email).eq("senha", senha).execute()
-            if result.data:
-                return {"success": True, "message": "Autenticado com sucesso"}
-            return {"success": False, "message": "Email ou senha incorretos"}
+            if not result.data:
+                return {"success": False, "message": "Email ou senha incorretos"}
+            return {"success": True, "data": result.data[0]}
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao autenticar usuário"}
+            return {"success": False, "message": str(e)}
 
     def obter_usuario_por_email(self, email: str):
-        """Busca um usuário pelo email"""
         try:
-            result = self.supabase.table("usuario").select("id, nome, email, perfil, criado_em").eq("email", email).execute()
+            result = self.supabase.table("usuario").select("*").eq("email", email).execute()
             if not result.data:
                 return {"success": False, "message": "Usuário não encontrado"}
-            return {"success": True, "data": result.data[0], "message": "Usuário encontrado"}
+            return {"success": True, "data": result.data[0]}
         except Exception as e:
-            return {"success": False, "error": str(e), "message": "Erro ao buscar usuário por email"}
+            return {"success": False, "error": str(e), "message": "Erro ao buscar usuário"}
 
-    # Endereço
+    # ---------- Endereço ----------
     def criar_endereco(self, cep: str, rua: str, numero: str, complemento: str = None):
-        """Cria um endereço"""
         try:
             result = self.supabase.table("enderecos").insert({
                 "cep": cep,
@@ -59,13 +62,12 @@ class SupabaseClient:
                 "numero": numero,
                 "complemento": complemento
             }).execute()
-            return {"success": True, "data": result.data[0] if result.data else None, "message": "Endereço criado"}
+            return {"success": True, "data": result.data[0] if result.data else None}
         except Exception as e:
             return {"success": False, "error": str(e), "message": "Erro ao criar endereço"}
 
-    # Leitor
+    # ---------- Leitor ----------
     def criar_leitor(self, usuario_id: str, id_endereco: str = None, telefone: str = None, email: str = None, nome: str = None):
-        """Cria um registro de leitor vinculado ao usuário e endereço"""
         try:
             result = self.supabase.table("leitor").insert({
                 "id_usuario": usuario_id,
@@ -74,66 +76,69 @@ class SupabaseClient:
                 "telefone": telefone,
                 "email": email
             }).execute()
-            return {"success": True, "data": result.data[0] if result.data else None, "message": "Leitor criado com sucesso"}
+            return {"success": True, "data": result.data[0] if result.data else None}
         except Exception as e:
             return {"success": False, "error": str(e), "message": "Erro ao criar leitor"}
 
-    # Cadastro completo
-    def cadastrar_usuario_completo(self, nome: str, email: str, senha: str, cep: str, rua: str, numero: str, complemento: str = None, telefone: str = None):
-        """Cadastra um usuário completo (usuario + leitor + endereco)"""
-        id_endereco = None
-        usuario_id = None
+    # ---------- Usuário Completo ----------
+    def cadastrar_usuario_completo(self, nome, email, senha, cep, rua, numero, complemento=None, telefone=None):
         try:
-            # Criar Endereço
-            endereco_result = self.criar_endereco(cep, rua, numero, complemento)
-            if not endereco_result['success']:
-                return endereco_result
-            id_endereco = str(endereco_result['data']['id'])
+            # 1) Criar endereço
+            endereco_res = self.criar_endereco(cep, rua, numero, complemento)
+            if not endereco_res["success"]:
+                return endereco_res
+            id_endereco = str(endereco_res["data"]["id"])
 
-            # Criar Usuário
-            usuario_result = self.criar_usuario(nome, email, senha)
-            if not usuario_result['success']:
-                # Rollback endereço
+            # 2) Criar usuário
+            usuario_res = self.criar_usuario(nome, email, senha)
+            if not usuario_res["success"]:
+                # Rollback do endereço
                 self._rollback_endereco(id_endereco)
-                return usuario_result
-            usuario_id = str(usuario_result['data']['id'])
+                return usuario_res
+            usuario_id = str(usuario_res["data"]["id"])
 
-            # Criar Leitor
-            leitor_result = self.criar_leitor(usuario_id, id_endereco, telefone, email, nome)
-            if not leitor_result['success']:
-                # Rollback usuário e endereço
+            # 3) Criar leitor
+            leitor_res = self.criar_leitor(usuario_id=usuario_id, id_endereco=id_endereco, telefone=telefone, email=email, nome=nome)
+            if not leitor_res["success"]:
                 self._rollback_usuario_e_endereco(usuario_id, id_endereco)
-                return {"success": False, "error": leitor_result['error'], "message": "Erro ao criar perfil de leitor. Rollback realizado."}
+                return {"success": False, "error": leitor_res["error"], "message": "Erro ao criar leitor. Rollback realizado."}
 
-            return {"success": True, "data": {"usuario": usuario_result['data'], "leitor": leitor_result['data']}, "message": "Usuário e leitor cadastrados com sucesso"}
+            return {"success": True, "data": {"usuario": usuario_res["data"], "leitor": leitor_res["data"]}}
 
         except Exception as e:
-            if usuario_id and id_endereco:
-                self._rollback_usuario_e_endereco(usuario_id, id_endereco)
-            elif id_endereco:
-                self._rollback_endereco(id_endereco)
             return {"success": False, "error": str(e), "message": "Erro ao cadastrar usuário completo"}
 
-    # Rollbacks fictícios (implemente conforme necessário)
-    def _rollback_endereco(self, endereco_id: str):
-        self.supabase.table("enderecos").delete().eq("id", endereco_id).execute()
+    # ---------- Rollback ----------
+    def _rollback_endereco(self, id_endereco):
+        try:
+            self.supabase.table("enderecos").delete().eq("id", id_endereco).execute()
+        except:
+            pass
 
-    def _rollback_usuario_e_endereco(self, usuario_id: str, endereco_id: str):
-        self.supabase.table("leitor").delete().eq("id_usuario", usuario_id).execute()
-        self.supabase.table("usuario").delete().eq("id", usuario_id).execute()
-        self.supabase.table("enderecos").delete().eq("id", endereco_id).execute()
+    def _rollback_usuario_e_endereco(self, usuario_id, id_endereco):
+        try:
+            self.supabase.table("leitor").delete().eq("id_usuario", usuario_id).execute()
+            self.supabase.table("usuario").delete().eq("id", usuario_id).execute()
+            self.supabase.table("enderecos").delete().eq("id", id_endereco).execute()
+        except:
+            pass
 
-    # Social login
-    def get_user_email_from_token(self, token: str):
-        """Exemplo: buscar email do usuário via token"""
-        # Implemente conforme sua lógica de social login ou Supabase Auth
-        return {"email": "teste@teste.com", "name": "Usuário Google"}
+    # ---------- Social/Login Google ----------
+    def get_user_email_from_token(self, token):
+        # Apenas exemplo; ajuste conforme integração real do Google
+        return {"email": "usuario@gmail.com", "name": "Usuário Google"}
 
-    def sync_social_user(self, email: str, nome: str):
-        """Exemplo: sincronizar usuário social"""
-        # Aqui você pode usar cadastrar_usuario_completo ou apenas criar usuário/leitor
-        return {"success": True, "usuario_id": "123", "email": email}
+    def sync_social_user(self, email, nome):
+        usuario = self.obter_usuario_por_email(email)
+        if usuario["success"]:
+            return {"success": True, "usuario_id": usuario["data"]["id"], "email": usuario["data"]["email"]}
+        else:
+            # Cria usuário + leitor
+            res = self.cadastrar_usuario_completo(nome, email, "senha_provisoria123", "00000-000", "Rua Exemplo", "123")
+            if res["success"]:
+                return {"success": True, "usuario_id": res["data"]["usuario"]["id"], "email": email}
+            return {"success": False, "error": res.get("error", "Erro desconhecido")}
 
 
-# Instância para importação
-supabase_client = SupabaseClient(supabase)
+# Instância global para importar em biblioteca.py ou auth.py
+supabase_client = SupabaseClient()
