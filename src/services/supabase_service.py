@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# Carrega .env
+# Carrega variáveis do .env
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -19,6 +19,8 @@ class SupabaseClient:
 
     # ---------- Usuário ----------
     def criar_usuario(self, nome: str, email: str, senha: str, perfil: str = "usuario"):
+        if not nome or not email or not senha:
+            return {"success": False, "message": "Nome, email e senha são obrigatórios"}
         try:
             result = self.supabase.table("usuario").insert({
                 "nome": nome,
@@ -26,17 +28,9 @@ class SupabaseClient:
                 "senha": senha,
                 "perfil": perfil
             }).execute()
-            return {
-                "success": True,
-                "data": result.data[0] if result.data else None,
-                "message": "Usuário criado com sucesso"
-            }
+            return {"success": True, "data": result.data[0] if result.data else None, "message": "Usuário criado com sucesso"}
         except Exception as e:
-            erro_msg = str(e)
-            print("[ERRO SUPABASE] criar_usuario:", erro_msg)
-            if "duplicate key" in erro_msg.lower() and "email" in erro_msg.lower():
-                return {"success": False, "error": erro_msg, "message": "Já existe um usuário com esse email."}
-            return {"success": False, "error": erro_msg, "message": "Erro ao criar usuário"}
+            return {"success": False, "error": str(e), "message": "Erro ao criar usuário"}
 
     def autenticar_usuario(self, email: str, senha: str):
         try:
@@ -45,7 +39,6 @@ class SupabaseClient:
                 return {"success": False, "message": "Email ou senha incorretos"}
             return {"success": True, "data": result.data[0]}
         except Exception as e:
-            print("[ERRO SUPABASE] autenticar_usuario:", str(e))
             return {"success": False, "message": str(e)}
 
     def obter_usuario_por_email(self, email: str):
@@ -55,11 +48,12 @@ class SupabaseClient:
                 return {"success": False, "message": "Usuário não encontrado"}
             return {"success": True, "data": result.data[0]}
         except Exception as e:
-            print("[ERRO SUPABASE] obter_usuario_por_email:", str(e))
             return {"success": False, "error": str(e), "message": "Erro ao buscar usuário"}
 
     # ---------- Endereço ----------
-    def criar_endereco(self, cep: str, rua: str, numero: str, complemento: str = None):
+    def criar_endereco(self, cep: str, rua: str, numero: str, complemento: str):
+        if not cep or not rua or not numero or not complemento:
+            return {"success": False, "message": "CEP, rua, número e complemento são obrigatórios"}
         try:
             result = self.supabase.table("enderecos").insert({
                 "cep": cep,
@@ -69,11 +63,12 @@ class SupabaseClient:
             }).execute()
             return {"success": True, "data": result.data[0] if result.data else None}
         except Exception as e:
-            print("[ERRO SUPABASE] criar_endereco:", str(e))
             return {"success": False, "error": str(e), "message": "Erro ao criar endereço"}
 
     # ---------- Leitor ----------
-    def criar_leitor(self, usuario_id: str, id_endereco: str = None, telefone: str = None, email: str = None, nome: str = None):
+    def criar_leitor(self, usuario_id: str, id_endereco: str, telefone: str, email: str, nome: str):
+        if not usuario_id or not id_endereco or not telefone or not email or not nome:
+            return {"success": False, "message": "Todos os campos do leitor são obrigatórios"}
         try:
             result = self.supabase.table("leitor").insert({
                 "id_usuario": usuario_id,
@@ -84,13 +79,10 @@ class SupabaseClient:
             }).execute()
             return {"success": True, "data": result.data[0] if result.data else None}
         except Exception as e:
-            erro_msg = str(e)
-            print("[ERRO SUPABASE] criar_leitor:", erro_msg)
-            return {"success": False, "error": erro_msg, "message": "Erro ao criar leitor"}
+            return {"success": False, "error": str(e), "message": "Erro ao criar leitor"}
 
     # ---------- Cadastro Completo ----------
-    def cadastrar_usuario_completo(self, nome, email, senha, cep, rua, numero, complemento=None, telefone=None):
-        """Cadastra usuário + endereço + leitor com rollback automático"""
+    def cadastrar_usuario_completo(self, nome, email, senha, cep, rua, numero, complemento, telefone):
         id_endereco = None
         usuario_id = None
         try:
@@ -120,7 +112,6 @@ class SupabaseClient:
                 self._rollback_usuario_e_endereco(usuario_id, id_endereco)
             elif id_endereco:
                 self._rollback_endereco(id_endereco)
-            print("[ERRO SUPABASE] cadastrar_usuario_completo:", str(e))
             return {"success": False, "error": str(e), "message": "Erro ao cadastrar usuário completo"}
 
     # ---------- Rollbacks ----------
@@ -148,11 +139,10 @@ class SupabaseClient:
         if usuario["success"]:
             return {"success": True, "usuario_id": usuario["data"]["id"], "email": usuario["data"]["email"]}
         else:
-            # Cria usuário + leitor
-            res = self.cadastrar_usuario_completo(nome, email, "senha_provisoria123", "00000-000", "Rua Exemplo", "123")
+            res = self.cadastrar_usuario_completo(nome, email, "senha_provisoria123", "00000-000", "Rua Exemplo", "123", "Complemento Exemplo", "000000000")
             if res["success"]:
                 return {"success": True, "usuario_id": res["data"]["usuario"]["id"], "email": email}
             return {"success": False, "error": res.get("error", "Erro desconhecido")}
 
-# Instância global para importar em routes
+# Instância global
 supabase_client = SupabaseClient()
