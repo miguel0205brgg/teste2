@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento de Dívida - Biblioteca</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pagamento_divida.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Pagamento de Dívida</h1>
+        <p>Utilize esta página para regularizar débitos pendentes com a biblioteca.</p>
+
+        <div id="divida-info" class="info-box">
+            <h2>Sua Dívida Atual</h2>
+            <p id="detalhes-divida">Buscando informações...</p>
+            <p class="valor-total">Valor Total: <span id="valor-divida">R$ 0,00</span></p>
+        </div>
+
+        <div class="pagamento-form">
+            <h2>Opções de Pagamento</h2>
+            <p>Selecione o método de pagamento (simulação):</p>
+            
+            <button id="btn-pagar" class="btn-pagar">Simular Pagamento (R$ 45,50)</button>
+            
+            <div id="mensagem-status" class="mensagem-status"></div>
+        </div>
+        
+        <a href="/dashboard-usuario" class="btn-voltar">Voltar para o Dashboard</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/pagamento_divida.js') }}"></script>
+</body>
+</html>

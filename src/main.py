@@ -3,6 +3,7 @@ from flask_cors import CORS
 from src.routes.biblioteca import biblioteca_bp
 from src.routes.auth import auth_bp
 from src.routes.frontend import frontend_bp
+from src.routes.pagamento import pagamento_bp
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
@@ -10,6 +11,7 @@ CORS(app)
 app.register_blueprint(biblioteca_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(frontend_bp)
+app.register_blueprint(pagamento_bp)
 
 
 if __name__ == "__main__":
