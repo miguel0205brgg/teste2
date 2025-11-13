@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from src.services.supabase_service import supabase_client
+from ..services.supabase_service import supabase_client
 
 auth_bp = Blueprint("auth", __name__)
 

@@ -38,6 +38,12 @@ def logout():
 
 @frontend_bp.route("/<path:filename>")
 def serve_html_files(filename):
+    # Rota para servir outros arquivos HTML do diretório 'templates'
+    # Ex: /login -> login.html
+    # Ex: /dashboard_usuario -> dashboard_usuario.html
+    
+    # Adiciona a extensão .html se não estiver presente
     if not filename.endswith(".html"):
-        filename += ".html"
+        filename = filename + ".html"
+        
     return render_template(filename)
